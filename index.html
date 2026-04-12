@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Craftsman Engg. — Industrial IoT Solutions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef7ff',
+                            100: '#d8ecff',
+                            200: '#b9deff',
+                            300: '#89cbff',
+                            400: '#52aeff',
+                            500: '#2a8bff',
+                            600: '#1a6df5',
+                            700: '#1255e1',
+                            800: '#1546b6',
+                            900: '#173d8f',
+                        },
+                        accent: {
+                            400: '#34d399',
+                            500: '#10b981',
+                            600: '#059669',
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4,0,0.6,1) infinite',
+                        'flow': 'flow 2s ease-in-out infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        flow: {
+                            '0%, 100%': { transform: 'translateX(0)', opacity: '0.3' },
+                            '50%': { transform: 'translateX(100%)', opacity: '1' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 5px rgba(42,139,255,0.3), 0 0 10px rgba(42,139,255,0.1)' },
+                            '100%': { boxShadow: '0 0 15px rgba(42,139,255,0.5), 0 0 30px rgba(42,139,255,0.2)' },
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        html { scroll-snap-type: y mandatory; }
+        .snap-section { scroll-snap-align: start; min-height: 100vh; }
+
+        .grid-bg {
+            background-image:
+                linear-gradient(rgba(42,139,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(42,139,255,0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        .dark .grid-bg {
+            background-image:
+                linear-gradient(rgba(42,139,255,0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(42,139,255,0.08) 1px, transparent 1px);
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(42,139,255,0.3); border-radius: 3px; }
+
+        .fade-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .glow-border {
+            box-shadow: 0 0 15px rgba(42,139,255,0.15);
+        }
+        .dark .glow-border {
+            box-shadow: 0 0 15px rgba(42,139,255,0.25), 0 0 30px rgba(42,139,255,0.1);
+        }
+
+        .status-running { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.6); }
+        .status-idle { background: #f59e0b; box-shadow: 0 0 8px rgba(245,158,11,0.6); }
+        .status-stopped { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.6); }
+
+        .bar-animate {
+            animation: barGrow 1.5s ease-out forwards;
+            transform-origin: bottom;
+        }
+        @keyframes barGrow {
+            from { transform: scaleY(0); }
+            to { transform: scaleY(1); }
+        }
+
+        .nav-dot { transition: all 0.3s ease; }
+        .nav-dot.active { transform: scale(1.5); }
+    </style>
+</head>
+<body class="bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+
+    <!-- Theme Toggle -->
+    <button id="themeToggle" class="fixed top-5 right-5 z-50 w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center shadow-lg hover:scale-110 transition-all duration-300 border border-gray-300 dark:border-gray-700">
+        <svg id="sunIcon" class="w-5 h-5 hidden dark:block text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"/></svg>
+        <svg id="moonIcon" class="w-5 h-5 block dark:hidden text-gray-700" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
+    </button>
+
+    <!-- Side Navigation Dots -->
+    <nav id="sideNav" class="fixed right-5 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-3">
+        <a href="#hero" class="nav-dot w-3 h-3 rounded-full bg-brand-500 opacity-50 hover:opacity-100 transition-all" data-section="0" title="Home"></a>
+        <a href="#what-is-iot" class="nav-dot w-3 h-3 rounded-full bg-brand-500 opacity-50 hover:opacity-100 transition-all" data-section="1" title="What is IoT"></a>
+        <a href="#problem" class="nav-dot w-3 h-3 rounded-full bg-brand-500 opacity-50 hover:opacity-100 transition-all" data-section="2" title="The Problem"></a>
+        <a href="#how-it-works" class="nav-dot w-3 h-3 rounded-full bg-brand-500 opacity-50 hover:opacity-100 transition-all" data-section="3" title="How It Works"></a>
+        <a href="#hardware-components" class="nav-dot w-3 h-3 rounded-full bg-brand-500 opacity-50 hover:opacity-100 transition-all" data-section="4" title="Hardware Components"></a>
+        <a href="#full-architecture" class="nav-dot w-3 h-3 rounded-full bg-brand-500 opacity-50 hover:opacity-100 transition-all" data-section="5" title="Full Architecture"></a>
+        <a href="#machine-types" class="nav-dot w-3 h-3 rounded-full bg-brand-500 opacity-50 hover:opacity-100 transition-all" data-section="6" title="Machine Types"></a>
+        <a href="#data-capture" class="nav-dot w-3 h-3 rounded-full bg-brand-500 opacity-50 hover:opacity-100 transition-all" data-section="7" title="Data Capture"></a>
+        <a href="#batch-mgmt" class="nav-dot w-3 h-3 rounded-full bg-brand-500 opacity-50 hover:opacity-100 transition-all" data-section="8" title="Batch Management"></a>
+        <a href="#comm-layers" class="nav-dot w-3 h-3 rounded-full bg-brand-500 opacity-50 hover:opacity-100 transition-all" data-section="9" title="Communication"></a>
+        <a href="#impact" class="nav-dot w-3 h-3 rounded-full bg-brand-500 opacity-50 hover:opacity-100 transition-all" data-section="10" title="Impact"></a>
+        <a href="#dashboard" class="nav-dot w-3 h-3 rounded-full bg-brand-500 opacity-50 hover:opacity-100 transition-all" data-section="11" title="Dashboard"></a>
+    </nav>
+
+    <!-- ==================== SECTION 1: HERO ==================== -->
+    <section id="hero" class="snap-section grid-bg flex flex-col items-center justify-center relative px-6">
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute top-1/4 left-1/4 w-72 h-72 bg-brand-500/10 rounded-full blur-3xl animate-pulse-slow"></div>
+            <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl animate-pulse-slow" style="animation-delay: 1s"></div>
+        </div>
+
+        <div class="relative text-center max-w-4xl mx-auto">
+            <div class="mb-8 fade-up">
+                <div class="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-brand-500/10 dark:bg-brand-500/20 border border-brand-500/20 dark:border-brand-500/30">
+                    <div class="w-3 h-3 rounded-full bg-brand-500 animate-pulse"></div>
+                    <span class="text-brand-600 dark:text-brand-400 font-semibold tracking-wider uppercase text-sm">Craftsman Engg.</span>
+                </div>
+            </div>
+
+            <h1 class="text-5xl md:text-7xl font-black mb-6 fade-up leading-tight">
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-accent-500">Smart Factory</span>
+                <br />Monitoring
+            </h1>
+
+            <p class="text-xl md:text-2xl text-gray-600 dark:text-gray-400 mb-8 fade-up max-w-2xl mx-auto leading-relaxed">
+                Transform your factory floor with real-time machine intelligence. Monitor, analyze, and optimize your production — from anywhere.
+            </p>
+
+            <div class="flex flex-wrap gap-4 justify-center mb-12 fade-up">
+                <div class="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800/50 text-sm">
+                    <div class="w-2 h-2 rounded-full status-running"></div>
+                    Real-time Monitoring
+                </div>
+                <div class="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800/50 text-sm">
+                    <div class="w-2 h-2 rounded-full status-running"></div>
+                    Predictive Maintenance
+                </div>
+                <div class="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800/50 text-sm">
+                    <div class="w-2 h-2 rounded-full status-running"></div>
+                    Production Analytics
+                </div>
+            </div>
+
+            <div class="animate-bounce fade-up">
+                <svg class="w-6 h-6 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                <p class="text-xs text-gray-400 mt-2">Scroll to explore</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== SECTION 2: WHAT IS IoT ==================== -->
+    <section id="what-is-iot" class="snap-section grid-bg flex items-center px-6 py-20">
+        <div class="max-w-6xl mx-auto w-full">
+            <div class="text-center mb-16">
+                <p class="text-brand-500 font-semibold text-sm tracking-wider uppercase mb-3 fade-up">Understanding the Basics</p>
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 fade-up">What is Industrial IoT?</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto fade-up leading-relaxed">
+                    Industrial IoT (Internet of Things) connects your factory machines to a central system through the internet.
+                    It lets you <strong class="text-gray-900 dark:text-white">see</strong>, <strong class="text-gray-900 dark:text-white">understand</strong>, and <strong class="text-gray-900 dark:text-white">improve</strong> everything happening on your factory floor — in real time, from anywhere.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="fade-up group">
+                    <div class="p-8 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 hover:border-brand-500/50 transition-all duration-300 glow-border h-full">
+                        <div class="w-16 h-16 rounded-2xl bg-brand-500/10 dark:bg-brand-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                            <svg class="w-8 h-8 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3">Connect</h3>
+                        <p class="text-gray-600 dark:text-gray-400 leading-relaxed">Your machines talk to a central system. Every CNC, VMC, and Press machine sends data about what it's doing, right now.</p>
+                    </div>
+                </div>
+
+                <div class="fade-up group" style="transition-delay: 0.1s">
+                    <div class="p-8 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 hover:border-accent-500/50 transition-all duration-300 glow-border h-full">
+                        <div class="w-16 h-16 rounded-2xl bg-accent-500/10 dark:bg-accent-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                            <svg class="w-8 h-8 text-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3">Monitor</h3>
+                        <p class="text-gray-600 dark:text-gray-400 leading-relaxed">See everything on a live dashboard — which machine is running, idle, or stopped. Track temperature, power, speed, and production counts.</p>
+                    </div>
+                </div>
+
+                <div class="fade-up group" style="transition-delay: 0.2s">
+                    <div class="p-8 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 hover:border-purple-500/50 transition-all duration-300 glow-border h-full">
+                        <div class="w-16 h-16 rounded-2xl bg-purple-500/10 dark:bg-purple-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                            <svg class="w-8 h-8 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3">Optimize</h3>
+                        <p class="text-gray-600 dark:text-gray-400 leading-relaxed">Use the data to make better decisions — reduce downtime, save electricity, predict failures before they happen, and increase output.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== SECTION 3: THE PROBLEM ==================== -->
+    <section id="problem" class="snap-section grid-bg flex items-center px-6 py-20">
+        <div class="max-w-6xl mx-auto w-full">
+            <div class="text-center mb-16">
+                <p class="text-red-500 font-semibold text-sm tracking-wider uppercase mb-3 fade-up">The Challenge</p>
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 fade-up">What Happens Without Smart Monitoring?</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto fade-up">
+                    Without IoT, factory floors run on guesswork. Here's what that costs you every day.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="fade-up p-6 rounded-2xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30">
+                    <div class="w-12 h-12 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Unplanned Downtime</h3>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">A machine breaks down unexpectedly. Production stops. You find out only when the operator reports it — hours lost.</p>
+                </div>
+
+                <div class="fade-up p-6 rounded-2xl bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900/30" style="transition-delay:0.05s">
+                    <div class="w-12 h-12 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">No Visibility</h3>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">You don't know which machine is idle, overloaded, or about to fail. Decisions are based on guesswork, not data.</p>
+                </div>
+
+                <div class="fade-up p-6 rounded-2xl bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900/30" style="transition-delay:0.1s">
+                    <div class="w-12 h-12 rounded-xl bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Manual Tracking</h3>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">Operators write logs on paper or whiteboards. Data gets lost, delayed, or is inaccurate. No way to analyze trends.</p>
+                </div>
+
+                <div class="fade-up p-6 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30" style="transition-delay:0.15s">
+                    <div class="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Wasted Energy</h3>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">Machines running when they shouldn't be. No way to track power consumption per machine or identify energy waste.</p>
+                </div>
+
+                <div class="fade-up p-6 rounded-2xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/30" style="transition-delay:0.2s">
+                    <div class="w-12 h-12 rounded-xl bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Batch Confusion</h3>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">No clear view of which machines are working on which product batch. Mix-ups lead to delays and quality issues.</p>
+                </div>
+
+                <div class="fade-up p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-800 flex items-center justify-center" style="transition-delay:0.25s">
+                    <div class="text-center">
+                        <p class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500 mb-2">30%</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Average production capacity lost due to lack of monitoring*</p>
+                        <p class="text-xs text-gray-400 mt-2">*Industry estimate</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== SECTION 4: HOW IT WORKS ==================== -->
+    <section id="how-it-works" class="snap-section grid-bg flex items-center px-6 py-20">
+        <div class="max-w-6xl mx-auto w-full">
+            <div class="text-center mb-16">
+                <p class="text-brand-500 font-semibold text-sm tracking-wider uppercase mb-3 fade-up">The Solution</p>
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 fade-up">How It Works</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto fade-up">
+                    Five simple layers connect your machines to a live dashboard. Here's the complete flow.
+                </p>
+            </div>
+
+            <div class="fade-up">
+                <div class="flex flex-col lg:flex-row items-center gap-4 lg:gap-0 justify-between">
+                    <!-- Layer 1: Machines -->
+                    <div class="flex-1 max-w-[200px]">
+                        <div class="p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 text-center hover:border-brand-500/50 transition-all group">
+                            <div class="w-16 h-16 mx-auto rounded-2xl bg-blue-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            </div>
+                            <h4 class="font-bold text-sm mb-1">Your Machines</h4>
+                            <p class="text-xs text-gray-500">CNC, VMC, Press</p>
+                        </div>
+                    </div>
+
+                    <!-- Arrow -->
+                    <div class="hidden lg:flex items-center flex-shrink-0 w-16">
+                        <div class="w-full h-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 relative">
+                            <div class="absolute top-1/2 left-0 -translate-y-1/2 w-2 h-2 rounded-full bg-blue-500 animate-flow"></div>
+                        </div>
+                        <svg class="w-4 h-4 text-cyan-500 -ml-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"/></svg>
+                    </div>
+                    <div class="lg:hidden"><svg class="w-6 h-6 text-cyan-500 rotate-90" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"/></svg></div>
+
+                    <!-- Layer 2: Sensors -->
+                    <div class="flex-1 max-w-[200px]">
+                        <div class="p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 text-center hover:border-cyan-500/50 transition-all group">
+                            <div class="w-16 h-16 mx-auto rounded-2xl bg-cyan-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <svg class="w-8 h-8 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                            </div>
+                            <h4 class="font-bold text-sm mb-1">Smart Sensors</h4>
+                            <p class="text-xs text-gray-500">Temp, Speed, Power</p>
+                        </div>
+                    </div>
+
+                    <!-- Arrow -->
+                    <div class="hidden lg:flex items-center flex-shrink-0 w-16">
+                        <div class="w-full h-0.5 bg-gradient-to-r from-cyan-500 to-teal-500 relative">
+                            <div class="absolute top-1/2 left-0 -translate-y-1/2 w-2 h-2 rounded-full bg-cyan-500 animate-flow" style="animation-delay: 0.5s"></div>
+                        </div>
+                        <svg class="w-4 h-4 text-teal-500 -ml-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"/></svg>
+                    </div>
+                    <div class="lg:hidden"><svg class="w-6 h-6 text-teal-500 rotate-90" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"/></svg></div>
+
+                    <!-- Layer 3: Gateway -->
+                    <div class="flex-1 max-w-[200px]">
+                        <div class="p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 text-center hover:border-teal-500/50 transition-all group">
+                            <div class="w-16 h-16 mx-auto rounded-2xl bg-teal-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <svg class="w-8 h-8 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+                            </div>
+                            <h4 class="font-bold text-sm mb-1">IoT Gateway</h4>
+                            <p class="text-xs text-gray-500">Collects & Sends</p>
+                        </div>
+                    </div>
+
+                    <!-- Arrow -->
+                    <div class="hidden lg:flex items-center flex-shrink-0 w-16">
+                        <div class="w-full h-0.5 bg-gradient-to-r from-teal-500 to-emerald-500 relative">
+                            <div class="absolute top-1/2 left-0 -translate-y-1/2 w-2 h-2 rounded-full bg-teal-500 animate-flow" style="animation-delay: 1s"></div>
+                        </div>
+                        <svg class="w-4 h-4 text-emerald-500 -ml-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"/></svg>
+                    </div>
+                    <div class="lg:hidden"><svg class="w-6 h-6 text-emerald-500 rotate-90" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"/></svg></div>
+
+                    <!-- Layer 4: Cloud -->
+                    <div class="flex-1 max-w-[200px]">
+                        <div class="p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 text-center hover:border-emerald-500/50 transition-all group">
+                            <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+                            </div>
+                            <h4 class="font-bold text-sm mb-1">Cloud Server</h4>
+                            <p class="text-xs text-gray-500">Process & Store</p>
+                        </div>
+                    </div>
+
+                    <!-- Arrow -->
+                    <div class="hidden lg:flex items-center flex-shrink-0 w-16">
+                        <div class="w-full h-0.5 bg-gradient-to-r from-emerald-500 to-green-500 relative">
+                            <div class="absolute top-1/2 left-0 -translate-y-1/2 w-2 h-2 rounded-full bg-emerald-500 animate-flow" style="animation-delay: 1.5s"></div>
+                        </div>
+                        <svg class="w-4 h-4 text-green-500 -ml-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"/></svg>
+                    </div>
+                    <div class="lg:hidden"><svg class="w-6 h-6 text-green-500 rotate-90" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"/></svg></div>
+
+                    <!-- Layer 5: Dashboard -->
+                    <div class="flex-1 max-w-[200px]">
+                        <div class="p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 text-center hover:border-green-500/50 transition-all animate-glow group">
+                            <div class="w-16 h-16 mx-auto rounded-2xl bg-green-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
+                            </div>
+                            <h4 class="font-bold text-sm mb-1">Live Dashboard</h4>
+                            <p class="text-xs text-gray-500">Monitor Anywhere</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Layer explanations -->
+                <div class="mt-12 grid md:grid-cols-5 gap-4 text-center">
+                    <div class="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20">
+                        <p class="text-xs font-semibold text-blue-600 dark:text-blue-400">Layer 1</p>
+                        <p class="text-xs text-gray-500 mt-1">CNC, VMC, Press machines with built-in controllers (PLCs)</p>
+                    </div>
+                    <div class="p-3 rounded-lg bg-cyan-50 dark:bg-cyan-950/20">
+                        <p class="text-xs font-semibold text-cyan-600 dark:text-cyan-400">Layer 2</p>
+                        <p class="text-xs text-gray-500 mt-1">Sensors read temperature, vibration, speed, and power</p>
+                    </div>
+                    <div class="p-3 rounded-lg bg-teal-50 dark:bg-teal-950/20">
+                        <p class="text-xs font-semibold text-teal-600 dark:text-teal-400">Layer 3</p>
+                        <p class="text-xs text-gray-500 mt-1">Small device on factory floor collects all sensor data</p>
+                    </div>
+                    <div class="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/20">
+                        <p class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Layer 4</p>
+                        <p class="text-xs text-gray-500 mt-1">Secure server processes and stores data 24/7</p>
+                    </div>
+                    <div class="p-3 rounded-lg bg-green-50 dark:bg-green-950/20">
+                        <p class="text-xs font-semibold text-green-600 dark:text-green-400">Layer 5</p>
+                        <p class="text-xs text-gray-500 mt-1">You see everything live on your screen — phone, tablet, PC</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== SECTION 5: HARDWARE COMPONENTS ==================== -->
+    <section id="hardware-components" class="snap-section grid-bg flex items-center px-6 py-20">
+        <div class="max-w-6xl mx-auto w-full">
+            <div class="text-center mb-12">
+                <p class="text-brand-500 font-semibold text-sm tracking-wider uppercase mb-3 fade-up">The Building Blocks</p>
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 fade-up">What Hardware Do You Need?</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto fade-up">
+                    Four key components sit between your machines and your dashboard. Here's what each one is, what it does, and why you need it.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6 fade-up">
+                <!-- Component 1: Sensors -->
+                <div class="p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 relative overflow-hidden">
+                    <div class="absolute top-4 right-4 w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 font-bold text-sm">1</div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-14 h-14 flex-shrink-0 rounded-2xl bg-green-500/10 flex items-center justify-center">
+                            <svg class="w-7 h-7 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold mb-1">Sensors</h3>
+                            <p class="text-xs text-gray-400 mb-3">Attached directly to each machine</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Small devices that <strong class="text-gray-900 dark:text-white">physically measure</strong> what the machine is doing. They produce raw electrical signals — not readable data yet.</p>
+
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-3 p-2.5 rounded-lg bg-green-500/5 dark:bg-green-500/10 border border-green-500/10">
+                                    <div class="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-bold">Current Sensor</p>
+                                        <p class="text-[10px] text-gray-500">Outputs 4-20 mA — tells if machine is ON/OFF and how hard it's working</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3 p-2.5 rounded-lg bg-red-500/5 dark:bg-red-500/10 border border-red-500/10">
+                                    <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M3 12a9 9 0 1118 0 9 9 0 01-18 0z"/></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-bold">Temperature Sensor</p>
+                                        <p class="text-[10px] text-gray-500">Outputs voltage — measures heat of spindle, motor, or coolant</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3 p-2.5 rounded-lg bg-blue-500/5 dark:bg-blue-500/10 border border-blue-500/10">
+                                    <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-bold">Proximity Sensor</p>
+                                        <p class="text-[10px] text-gray-500">Outputs ON/OFF pulses — counts each job/part completed</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3 p-2.5 rounded-lg bg-purple-500/5 dark:bg-purple-500/10 border border-purple-500/10">
+                                    <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-bold">Vibration Sensor</p>
+                                        <p class="text-[10px] text-gray-500">Detects abnormal shaking — early warning for mechanical failure</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Component 2: PLC / IO Module -->
+                <div class="p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 relative overflow-hidden">
+                    <div class="absolute top-4 right-4 w-8 h-8 rounded-full bg-yellow-500/10 flex items-center justify-center text-yellow-500 font-bold text-sm">2</div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-14 h-14 flex-shrink-0 rounded-2xl bg-yellow-500/10 flex items-center justify-center">
+                            <svg class="w-7 h-7 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold mb-1">PLC / IO Module</h3>
+                            <p class="text-xs text-gray-400 mb-3">Programmable Logic Controller — the "translator"</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4"><strong class="text-gray-900 dark:text-white">What is a PLC?</strong> A small industrial computer that reads raw electrical signals from sensors and converts them into meaningful data that software can understand.</p>
+
+                            <div class="p-4 rounded-xl bg-yellow-500/5 dark:bg-yellow-500/10 border border-yellow-500/15 mb-4">
+                                <p class="text-xs font-bold text-yellow-600 dark:text-yellow-400 mb-2">What the PLC does (translation):</p>
+                                <div class="space-y-1.5 font-mono text-xs">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-gray-500">4 mA signal</span>
+                                        <svg class="w-4 h-4 text-yellow-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                                        <span class="text-red-500 font-semibold">"Machine is OFF"</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-gray-500">18 mA signal</span>
+                                        <svg class="w-4 h-4 text-yellow-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                                        <span class="text-green-500 font-semibold">"Machine is RUNNING"</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-gray-500">Pulse count</span>
+                                        <svg class="w-4 h-4 text-yellow-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                                        <span class="text-blue-500 font-semibold">"Jobs done: 47"</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-gray-500">Voltage level</span>
+                                        <svg class="w-4 h-4 text-yellow-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                                        <span class="text-orange-500 font-semibold">"Temp: 62°C"</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-2 py-1 text-[10px] rounded bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300">e.g. Siemens S7-1200</span>
+                                <span class="px-2 py-1 text-[10px] rounded bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300">Allen-Bradley</span>
+                                <span class="px-2 py-1 text-[10px] rounded bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300">Modbus / OPC-UA output</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Component 3: Edge Gateway -->
+                <div class="p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 relative overflow-hidden">
+                    <div class="absolute top-4 right-4 w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-500 font-bold text-sm">3</div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-14 h-14 flex-shrink-0 rounded-2xl bg-purple-500/10 flex items-center justify-center">
+                            <svg class="w-7 h-7 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold mb-1">Edge Gateway</h3>
+                            <p class="text-xs text-gray-400 mb-3">Raspberry Pi / Industrial mini PC — the "packager"</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">A small computer sitting on the factory floor. It reads data from the PLC every <strong class="text-gray-900 dark:text-white">1-5 seconds</strong> and packages it into internet-friendly format (JSON) to send to the cloud.</p>
+
+                            <div class="p-4 rounded-xl bg-purple-500/5 dark:bg-purple-500/10 border border-purple-500/15 mb-4">
+                                <p class="text-xs font-bold text-purple-600 dark:text-purple-400 mb-2">What the gateway sends (every few seconds):</p>
+                                <div class="bg-gray-900 dark:bg-gray-950 rounded-lg p-3 font-mono text-xs">
+                                    <span class="text-gray-500">// Packaged as JSON →</span><br>
+                                    <span class="text-purple-400">{</span><br>
+                                    <span class="text-gray-400">&nbsp;&nbsp;"machine"</span><span class="text-white">:</span> <span class="text-green-400">"CNC-01"</span><span class="text-white">,</span><br>
+                                    <span class="text-gray-400">&nbsp;&nbsp;"status"</span><span class="text-white">:</span> <span class="text-green-400">"RUNNING"</span><span class="text-white">,</span><br>
+                                    <span class="text-gray-400">&nbsp;&nbsp;"jobs"</span><span class="text-white">:</span> <span class="text-orange-400">47</span><span class="text-white">,</span><br>
+                                    <span class="text-gray-400">&nbsp;&nbsp;"temp"</span><span class="text-white">:</span> <span class="text-orange-400">62</span><span class="text-white">,</span><br>
+                                    <span class="text-gray-400">&nbsp;&nbsp;"power_kw"</span><span class="text-white">:</span> <span class="text-orange-400">4.2</span><span class="text-white">,</span><br>
+                                    <span class="text-gray-400">&nbsp;&nbsp;"vibration"</span><span class="text-white">:</span> <span class="text-green-400">"normal"</span><br>
+                                    <span class="text-purple-400">}</span>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-2 py-1 text-[10px] rounded bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300">Raspberry Pi 4</span>
+                                <span class="px-2 py-1 text-[10px] rounded bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300">Sends via MQTT</span>
+                                <span class="px-2 py-1 text-[10px] rounded bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300">WiFi / Ethernet</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Component 4: MQTT Broker + Server -->
+                <div class="p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 relative overflow-hidden">
+                    <div class="absolute top-4 right-4 w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 font-bold text-sm">4</div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-14 h-14 flex-shrink-0 rounded-2xl bg-blue-500/10 flex items-center justify-center">
+                            <svg class="w-7 h-7 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold mb-1">MQTT Broker + Server</h3>
+                            <p class="text-xs text-gray-400 mb-3">The "post office" + your backend application</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4"><strong class="text-gray-900 dark:text-white">MQTT Broker</strong> (like Mosquitto or HiveMQ) is a message router — the gateway publishes data to it, and your server subscribes to receive it. Think of it as a smart post office for machine data.</p>
+
+                            <div class="p-4 rounded-xl bg-blue-500/5 dark:bg-blue-500/10 border border-blue-500/15 mb-4">
+                                <p class="text-xs font-bold text-blue-600 dark:text-blue-400 mb-2">Your server then does 3 things:</p>
+                                <div class="space-y-2">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-6 h-6 rounded bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                                            <svg class="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+                                        </div>
+                                        <p class="text-xs"><strong>Store</strong> — saves to Time-Series DB (InfluxDB / TimescaleDB)</p>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-6 h-6 rounded bg-teal-500/20 flex items-center justify-center flex-shrink-0">
+                                            <svg class="w-3 h-3 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5z"/></svg>
+                                        </div>
+                                        <p class="text-xs"><strong>Display</strong> — pushes live data to your dashboard via WebSocket</p>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-6 h-6 rounded bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+                                            <svg class="w-3 h-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                                        </div>
+                                        <p class="text-xs"><strong>Alert</strong> — sends SMS/email if temp too high or machine stops</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-2 py-1 text-[10px] rounded bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">Node.js / Python</span>
+                                <span class="px-2 py-1 text-[10px] rounded bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">REST API</span>
+                                <span class="px-2 py-1 text-[10px] rounded bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">WebSocket</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick summary flow -->
+            <div class="mt-8 fade-up p-4 rounded-xl bg-brand-500/5 dark:bg-brand-500/10 border border-brand-500/20">
+                <p class="text-center text-sm text-gray-600 dark:text-gray-400">
+                    <strong class="text-gray-900 dark:text-white">In short:</strong>
+                    Sensors <span class="text-gray-400">(measure)</span> →
+                    PLC <span class="text-gray-400">(translate)</span> →
+                    Gateway <span class="text-gray-400">(package & send)</span> →
+                    MQTT Broker <span class="text-gray-400">(route)</span> →
+                    Server <span class="text-gray-400">(store, display, alert)</span>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== SECTION 6: FULL ARCHITECTURE ==================== -->
+    <section id="full-architecture" class="snap-section grid-bg flex items-center px-6 py-20">
+        <div class="max-w-6xl mx-auto w-full">
+            <div class="text-center mb-12">
+                <p class="text-brand-500 font-semibold text-sm tracking-wider uppercase mb-3 fade-up">Complete System View</p>
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 fade-up">Full Architecture</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto fade-up">
+                    How each machine type connects differently, and how all the pieces fit together in a real deployment.
+                </p>
+            </div>
+
+            <div class="fade-up">
+                <!-- 3-Tier Architecture Diagram -->
+                <div class="space-y-4">
+
+                    <!-- TIER 1: MACHINES (Bottom) -->
+                    <div class="p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
+                        <div class="flex items-center gap-2 mb-5">
+                            <div class="px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20">
+                                <span class="text-xs font-bold text-green-600 dark:text-green-400 uppercase tracking-wider">Machine Layer</span>
+                            </div>
+                            <div class="flex-1 h-px bg-green-500/20"></div>
+                            <span class="text-xs text-gray-400">Factory Floor</span>
+                        </div>
+
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <!-- CNC -->
+                            <div class="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <div class="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0"/></svg>
+                                    </div>
+                                    <h4 class="font-bold text-sm text-brand-500">CNC Machine</h4>
+                                </div>
+                                <p class="text-[11px] text-gray-500 mb-3">Connects via: <strong class="text-gray-700 dark:text-gray-300">External Sensors</strong></p>
+                                <div class="space-y-1 text-[10px] text-gray-600 dark:text-gray-400">
+                                    <div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-green-500"></div>Current sensor (on/off)</div>
+                                    <div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-green-500"></div>Vibration sensor (running/idle)</div>
+                                    <div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-green-500"></div>Temp sensor (heat)</div>
+                                    <div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-green-500"></div>Proximity sensor (job count)</div>
+                                    <div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-green-500"></div>Relay (alarm signal)</div>
+                                </div>
+                                <div class="mt-3 px-2 py-1 rounded bg-brand-500/10 text-[10px] text-center font-mono text-brand-600 dark:text-brand-400">Modbus RTU/TCP</div>
+                            </div>
+
+                            <!-- VMC -->
+                            <div class="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <div class="w-8 h-8 rounded-lg bg-accent-500/10 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                                    </div>
+                                    <h4 class="font-bold text-sm text-accent-500">VMC Machine</h4>
+                                </div>
+                                <p class="text-[11px] text-gray-500 mb-3">Connects via: <strong class="text-gray-700 dark:text-gray-300">Built-in Controller</strong></p>
+                                <div class="space-y-1 text-[10px] text-gray-600 dark:text-gray-400">
+                                    <div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-accent-500"></div>FANUC / Siemens controller</div>
+                                    <div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-accent-500"></div>OPC-UA / Modbus built-in</div>
+                                    <div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-accent-500"></div>Native data output</div>
+                                    <div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-accent-500"></div>Direct digital interface</div>
+                                    <div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-accent-500"></div>No extra sensors needed</div>
+                                </div>
+                                <div class="mt-3 px-2 py-1 rounded bg-accent-500/10 text-[10px] text-center font-mono text-accent-600 dark:text-accent-400">OPC-UA</div>
+                            </div>
+
+                            <!-- Press -->
+                            <div class="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <div class="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                                    </div>
+                                    <h4 class="font-bold text-sm text-purple-500">Press Machine</h4>
+                                </div>
+                                <p class="text-[11px] text-gray-500 mb-3">Connects via: <strong class="text-gray-700 dark:text-gray-300">Retrofit Sensors</strong></p>
+                                <div class="space-y-1 text-[10px] text-gray-600 dark:text-gray-400">
+                                    <div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-purple-500"></div>Pressure transducer</div>
+                                    <div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-purple-500"></div>Proximity counter</div>
+                                    <div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-purple-500"></div>Digital I/O relay</div>
+                                    <div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-purple-500"></div>Oil temp sensor</div>
+                                    <div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-purple-500"></div>Current clamp</div>
+                                </div>
+                                <div class="mt-3 px-2 py-1 rounded bg-purple-500/10 text-[10px] text-center font-mono text-purple-600 dark:text-purple-400">Digital I/O</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Arrow Down -->
+                    <div class="flex justify-center">
+                        <div class="flex flex-col items-center gap-1">
+                            <div class="w-0.5 h-4 bg-gradient-to-b from-green-500 to-yellow-500"></div>
+                            <svg class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                        </div>
+                    </div>
+
+                    <!-- TIER 2: GATEWAY (Middle) -->
+                    <div class="p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
+                        <div class="flex items-center gap-2 mb-5">
+                            <div class="px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20">
+                                <span class="text-xs font-bold text-yellow-600 dark:text-yellow-400 uppercase tracking-wider">Gateway Layer</span>
+                            </div>
+                            <div class="flex-1 h-px bg-yellow-500/20"></div>
+                            <span class="text-xs text-gray-400">Factory Floor (Edge)</span>
+                        </div>
+
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div class="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-center">
+                                <div class="w-10 h-10 mx-auto rounded-xl bg-yellow-500/10 flex items-center justify-center mb-3">
+                                    <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+                                </div>
+                                <h4 class="font-bold text-sm mb-1">PLC / IO Module</h4>
+                                <p class="text-[10px] text-gray-500">Reads raw sensor signals &<br>translates to digital data</p>
+                            </div>
+                            <div class="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-center">
+                                <div class="w-10 h-10 mx-auto rounded-xl bg-purple-500/10 flex items-center justify-center mb-3">
+                                    <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"/></svg>
+                                </div>
+                                <h4 class="font-bold text-sm mb-1">Edge Gateway</h4>
+                                <p class="text-[10px] text-gray-500">Raspberry Pi / industrial PC<br>Packages data as JSON</p>
+                            </div>
+                            <div class="p-4 rounded-xl bg-white dark:bg-gray-800 border border-yellow-300 dark:border-yellow-700 text-center animate-glow">
+                                <div class="w-10 h-10 mx-auto rounded-xl bg-yellow-500/10 flex items-center justify-center mb-3">
+                                    <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                </div>
+                                <h4 class="font-bold text-sm mb-1">MQTT Broker</h4>
+                                <p class="text-[10px] text-gray-500">Mosquitto / HiveMQ<br>Routes messages (pub/sub)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Arrow Down -->
+                    <div class="flex justify-center">
+                        <div class="flex flex-col items-center gap-1">
+                            <div class="w-0.5 h-4 bg-gradient-to-b from-yellow-500 to-blue-500"></div>
+                            <div class="px-3 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-[10px] text-gray-500 font-mono">MQTT (pub/sub) over WiFi / Ethernet</div>
+                            <svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                        </div>
+                    </div>
+
+                    <!-- TIER 3: BACKEND (Top) -->
+                    <div class="p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
+                        <div class="flex items-center gap-2 mb-5">
+                            <div class="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20">
+                                <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Backend Layer</span>
+                            </div>
+                            <div class="flex-1 h-px bg-blue-500/20"></div>
+                            <span class="text-xs text-gray-400">Cloud / Server</span>
+                        </div>
+
+                        <div class="flex flex-col items-center gap-4">
+                            <!-- Server -->
+                            <div class="w-full max-w-md p-4 rounded-xl bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800 text-center">
+                                <div class="w-10 h-10 mx-auto rounded-xl bg-blue-500/10 flex items-center justify-center mb-2">
+                                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+                                </div>
+                                <h4 class="font-bold text-sm">Node.js / Python Server</h4>
+                                <p class="text-[10px] text-gray-500">MQTT client + REST API</p>
+                            </div>
+
+                            <!-- Three outputs -->
+                            <div class="grid grid-cols-3 gap-4 w-full">
+                                <div class="p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-center">
+                                    <div class="w-8 h-8 mx-auto rounded-lg bg-blue-500/10 flex items-center justify-center mb-2">
+                                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+                                    </div>
+                                    <h5 class="font-bold text-xs">Time-Series DB</h5>
+                                    <p class="text-[10px] text-gray-500 mt-1">InfluxDB / TimescaleDB</p>
+                                </div>
+                                <div class="p-3 rounded-xl bg-white dark:bg-gray-800 border border-teal-200 dark:border-teal-800 text-center">
+                                    <div class="w-8 h-8 mx-auto rounded-lg bg-teal-500/10 flex items-center justify-center mb-2">
+                                        <svg class="w-4 h-4 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z"/></svg>
+                                    </div>
+                                    <h5 class="font-bold text-xs">Dashboard</h5>
+                                    <p class="text-[10px] text-gray-500 mt-1">Custom UI / Grafana</p>
+                                </div>
+                                <div class="p-3 rounded-xl bg-white dark:bg-gray-800 border border-orange-200 dark:border-orange-800 text-center">
+                                    <div class="w-8 h-8 mx-auto rounded-lg bg-orange-500/10 flex items-center justify-center mb-2">
+                                        <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                                    </div>
+                                    <h5 class="font-bold text-xs">Alerts</h5>
+                                    <p class="text-[10px] text-gray-500 mt-1">SMS / Email</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Insight -->
+                <div class="mt-6 p-4 rounded-xl bg-brand-500/5 dark:bg-brand-500/10 border border-brand-500/20">
+                    <p class="text-center text-sm text-gray-600 dark:text-gray-400">
+                        <strong class="text-gray-900 dark:text-white">Key insight:</strong> CNC machines need external sensors attached. VMC machines already have smart controllers built-in (FANUC/Siemens). Press machines need retrofit sensors. The <strong>gateway and server layers are the same</strong> for all machine types — only the sensor connection differs.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== SECTION 7: MACHINE TYPES ==================== -->
+    <section id="machine-types" class="snap-section grid-bg flex items-center px-6 py-20">
+        <div class="max-w-6xl mx-auto w-full">
+            <div class="text-center mb-16">
+                <p class="text-brand-500 font-semibold text-sm tracking-wider uppercase mb-3 fade-up">Your Equipment</p>
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 fade-up">Machine Types We Connect</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto fade-up">
+                    Each machine type generates unique data. We capture what matters most for each.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- CNC -->
+                <div class="fade-up group">
+                    <div class="p-8 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 hover:border-brand-500/50 transition-all duration-300 h-full">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="w-14 h-14 rounded-2xl bg-brand-500/10 flex items-center justify-center">
+                                <svg class="w-7 h-7 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold">CNC Machines</h3>
+                                <p class="text-sm text-gray-500">Computer Numerical Control</p>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">Precision cutting, drilling, and milling machines controlled by computer programs. Used for high-accuracy metal and material shaping.</p>
+                        <div class="space-y-2">
+                            <p class="text-xs font-semibold text-brand-500 uppercase tracking-wider">Data We Capture:</p>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-2 py-1 text-xs rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400">Spindle Speed</span>
+                                <span class="px-2 py-1 text-xs rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400">Feed Rate</span>
+                                <span class="px-2 py-1 text-xs rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400">Tool Wear</span>
+                                <span class="px-2 py-1 text-xs rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400">Cycle Time</span>
+                                <span class="px-2 py-1 text-xs rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400">Temperature</span>
+                                <span class="px-2 py-1 text-xs rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400">Power Draw</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VMC -->
+                <div class="fade-up group" style="transition-delay: 0.1s">
+                    <div class="p-8 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 hover:border-accent-500/50 transition-all duration-300 h-full">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="w-14 h-14 rounded-2xl bg-accent-500/10 flex items-center justify-center">
+                                <svg class="w-7 h-7 text-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold">VMC Machines</h3>
+                                <p class="text-sm text-gray-500">Vertical Machining Center</p>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">Vertical spindle machines for milling, drilling, and boring. Versatile for complex part geometries with multiple axis movements.</p>
+                        <div class="space-y-2">
+                            <p class="text-xs font-semibold text-accent-500 uppercase tracking-wider">Data We Capture:</p>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-2 py-1 text-xs rounded-full bg-accent-500/10 text-accent-600 dark:text-accent-400">Axis Position</span>
+                                <span class="px-2 py-1 text-xs rounded-full bg-accent-500/10 text-accent-600 dark:text-accent-400">Vibration</span>
+                                <span class="px-2 py-1 text-xs rounded-full bg-accent-500/10 text-accent-600 dark:text-accent-400">Coolant Flow</span>
+                                <span class="px-2 py-1 text-xs rounded-full bg-accent-500/10 text-accent-600 dark:text-accent-400">Spindle Load</span>
+                                <span class="px-2 py-1 text-xs rounded-full bg-accent-500/10 text-accent-600 dark:text-accent-400">Part Count</span>
+                                <span class="px-2 py-1 text-xs rounded-full bg-accent-500/10 text-accent-600 dark:text-accent-400">Run Time</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Press -->
+                <div class="fade-up group" style="transition-delay: 0.2s">
+                    <div class="p-8 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 hover:border-purple-500/50 transition-all duration-300 h-full">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center">
+                                <svg class="w-7 h-7 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold">Press Machines</h3>
+                                <p class="text-sm text-gray-500">Hydraulic / Mechanical Press</p>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">High-force machines for stamping, forming, and shaping metal sheets. Critical for high-volume production runs.</p>
+                        <div class="space-y-2">
+                            <p class="text-xs font-semibold text-purple-500 uppercase tracking-wider">Data We Capture:</p>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-2 py-1 text-xs rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400">Press Force</span>
+                                <span class="px-2 py-1 text-xs rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400">Stroke Count</span>
+                                <span class="px-2 py-1 text-xs rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400">Oil Temp</span>
+                                <span class="px-2 py-1 text-xs rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400">Oil Pressure</span>
+                                <span class="px-2 py-1 text-xs rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400">Tonnage</span>
+                                <span class="px-2 py-1 text-xs rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400">Cycle Rate</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== SECTION 6: DATA WE CAPTURE ==================== -->
+    <section id="data-capture" class="snap-section grid-bg flex items-center px-6 py-20">
+        <div class="max-w-6xl mx-auto w-full">
+            <div class="text-center mb-16">
+                <p class="text-brand-500 font-semibold text-sm tracking-wider uppercase mb-3 fade-up">Real-Time Intelligence</p>
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 fade-up">What Data Do We Capture?</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto fade-up">
+                    Every machine generates valuable data every second. Here's what we track across all your equipment.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                <div class="fade-up p-5 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 text-center hover:border-red-500/50 transition-all">
+                    <div class="w-12 h-12 mx-auto rounded-xl bg-red-500/10 flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M3 12a9 9 0 1118 0 9 9 0 01-18 0z"/></svg>
+                    </div>
+                    <h4 class="font-bold text-sm">Temperature</h4>
+                    <p class="text-xs text-gray-500 mt-1">Spindle, coolant, ambient heat levels</p>
+                </div>
+
+                <div class="fade-up p-5 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 text-center hover:border-yellow-500/50 transition-all" style="transition-delay:0.05s">
+                    <div class="w-12 h-12 mx-auto rounded-xl bg-yellow-500/10 flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <h4 class="font-bold text-sm">Power Usage</h4>
+                    <p class="text-xs text-gray-500 mt-1">kWh consumed per machine, per hour</p>
+                </div>
+
+                <div class="fade-up p-5 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 text-center hover:border-green-500/50 transition-all" style="transition-delay:0.1s">
+                    <div class="w-12 h-12 mx-auto rounded-xl bg-green-500/10 flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <h4 class="font-bold text-sm">Uptime / Downtime</h4>
+                    <p class="text-xs text-gray-500 mt-1">When on, off, and for how long</p>
+                </div>
+
+                <div class="fade-up p-5 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 text-center hover:border-blue-500/50 transition-all" style="transition-delay:0.15s">
+                    <div class="w-12 h-12 mx-auto rounded-xl bg-blue-500/10 flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                    </div>
+                    <h4 class="font-bold text-sm">Spindle Speed</h4>
+                    <p class="text-xs text-gray-500 mt-1">RPM tracking for quality control</p>
+                </div>
+
+                <div class="fade-up p-5 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 text-center hover:border-purple-500/50 transition-all" style="transition-delay:0.2s">
+                    <div class="w-12 h-12 mx-auto rounded-xl bg-purple-500/10 flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    </div>
+                    <h4 class="font-bold text-sm">Job Count</h4>
+                    <p class="text-xs text-gray-500 mt-1">Parts produced per shift/day</p>
+                </div>
+
+                <div class="fade-up p-5 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 text-center hover:border-orange-500/50 transition-all" style="transition-delay:0.25s">
+                    <div class="w-12 h-12 mx-auto rounded-xl bg-orange-500/10 flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                    </div>
+                    <h4 class="font-bold text-sm">Idle Time</h4>
+                    <p class="text-xs text-gray-500 mt-1">Machine on but not producing</p>
+                </div>
+
+                <div class="fade-up p-5 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 text-center hover:border-teal-500/50 transition-all" style="transition-delay:0.3s">
+                    <div class="w-12 h-12 mx-auto rounded-xl bg-teal-500/10 flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    </div>
+                    <h4 class="font-bold text-sm">Vibration</h4>
+                    <p class="text-xs text-gray-500 mt-1">Detect imbalance before failure</p>
+                </div>
+
+                <div class="fade-up p-5 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 text-center hover:border-indigo-500/50 transition-all" style="transition-delay:0.35s">
+                    <div class="w-12 h-12 mx-auto rounded-xl bg-indigo-500/10 flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                    <h4 class="font-bold text-sm">OEE Score</h4>
+                    <p class="text-xs text-gray-500 mt-1">Overall Equipment Effectiveness</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== SECTION 7: BATCH MANAGEMENT ==================== -->
+    <section id="batch-mgmt" class="snap-section grid-bg flex items-center px-6 py-20">
+        <div class="max-w-6xl mx-auto w-full">
+            <div class="text-center mb-16">
+                <p class="text-brand-500 font-semibold text-sm tracking-wider uppercase mb-3 fade-up">Production Tracking</p>
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 fade-up">Batch Management</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto fade-up">
+                    Multiple machines working on different products? We track every batch separately so you always know what's running where.
+                </p>
+            </div>
+
+            <div class="fade-up">
+                <div class="p-8 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
+                    <h3 class="font-bold text-lg mb-6 text-center">Example: 10 CNC Machines, 2 Product Batches</h3>
+
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <!-- Batch A -->
+                        <div class="p-6 rounded-xl bg-brand-500/5 dark:bg-brand-500/10 border border-brand-500/20">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-4 h-4 rounded-full bg-brand-500"></div>
+                                <h4 class="font-bold text-brand-600 dark:text-brand-400">Batch A — Product X</h4>
+                            </div>
+                            <div class="grid grid-cols-5 gap-2 mb-4">
+                                <div class="aspect-square rounded-lg bg-brand-500/20 border border-brand-500/30 flex flex-col items-center justify-center p-1">
+                                    <div class="w-2 h-2 rounded-full status-running mb-1"></div>
+                                    <span class="text-[10px] font-mono">CNC-01</span>
+                                </div>
+                                <div class="aspect-square rounded-lg bg-brand-500/20 border border-brand-500/30 flex flex-col items-center justify-center p-1">
+                                    <div class="w-2 h-2 rounded-full status-running mb-1"></div>
+                                    <span class="text-[10px] font-mono">CNC-02</span>
+                                </div>
+                                <div class="aspect-square rounded-lg bg-brand-500/20 border border-brand-500/30 flex flex-col items-center justify-center p-1">
+                                    <div class="w-2 h-2 rounded-full status-running mb-1"></div>
+                                    <span class="text-[10px] font-mono">CNC-03</span>
+                                </div>
+                                <div class="aspect-square rounded-lg bg-brand-500/20 border border-brand-500/30 flex flex-col items-center justify-center p-1">
+                                    <div class="w-2 h-2 rounded-full status-idle mb-1"></div>
+                                    <span class="text-[10px] font-mono">CNC-04</span>
+                                </div>
+                                <div class="aspect-square rounded-lg bg-brand-500/20 border border-brand-500/30 flex flex-col items-center justify-center p-1">
+                                    <div class="w-2 h-2 rounded-full status-running mb-1"></div>
+                                    <span class="text-[10px] font-mono">CNC-05</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-between text-xs text-gray-500">
+                                <span>4/5 Running</span>
+                                <span>1 Idle</span>
+                                <span>342 parts done</span>
+                            </div>
+                        </div>
+
+                        <!-- Batch B -->
+                        <div class="p-6 rounded-xl bg-accent-500/5 dark:bg-accent-500/10 border border-accent-500/20">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-4 h-4 rounded-full bg-accent-500"></div>
+                                <h4 class="font-bold text-accent-600 dark:text-accent-400">Batch B — Product Y</h4>
+                            </div>
+                            <div class="grid grid-cols-5 gap-2 mb-4">
+                                <div class="aspect-square rounded-lg bg-accent-500/20 border border-accent-500/30 flex flex-col items-center justify-center p-1">
+                                    <div class="w-2 h-2 rounded-full status-running mb-1"></div>
+                                    <span class="text-[10px] font-mono">CNC-06</span>
+                                </div>
+                                <div class="aspect-square rounded-lg bg-accent-500/20 border border-accent-500/30 flex flex-col items-center justify-center p-1">
+                                    <div class="w-2 h-2 rounded-full status-running mb-1"></div>
+                                    <span class="text-[10px] font-mono">CNC-07</span>
+                                </div>
+                                <div class="aspect-square rounded-lg bg-accent-500/20 border border-accent-500/30 flex flex-col items-center justify-center p-1">
+                                    <div class="w-2 h-2 rounded-full status-stopped mb-1"></div>
+                                    <span class="text-[10px] font-mono">CNC-08</span>
+                                </div>
+                                <div class="aspect-square rounded-lg bg-accent-500/20 border border-accent-500/30 flex flex-col items-center justify-center p-1">
+                                    <div class="w-2 h-2 rounded-full status-running mb-1"></div>
+                                    <span class="text-[10px] font-mono">CNC-09</span>
+                                </div>
+                                <div class="aspect-square rounded-lg bg-accent-500/20 border border-accent-500/30 flex flex-col items-center justify-center p-1">
+                                    <div class="w-2 h-2 rounded-full status-running mb-1"></div>
+                                    <span class="text-[10px] font-mono">CNC-10</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-between text-xs text-gray-500">
+                                <span>4/5 Running</span>
+                                <span>1 Stopped</span>
+                                <span>289 parts done</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-6 justify-center mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center gap-2 text-xs"><div class="w-3 h-3 rounded-full status-running"></div><span>Running</span></div>
+                        <div class="flex items-center gap-2 text-xs"><div class="w-3 h-3 rounded-full status-idle"></div><span>Idle</span></div>
+                        <div class="flex items-center gap-2 text-xs"><div class="w-3 h-3 rounded-full status-stopped"></div><span>Stopped / Error</span></div>
+                    </div>
+                </div>
+
+                <div class="mt-6 p-4 rounded-xl bg-brand-500/5 dark:bg-brand-500/10 border border-brand-500/20 text-center">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        This same batch view works for <strong>VMC</strong> and <strong>Press</strong> machines too. Each machine type can have multiple batches running different products simultaneously.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== SECTION 8: COMMUNICATION LAYERS ==================== -->
+    <section id="comm-layers" class="snap-section grid-bg flex items-center px-6 py-20">
+        <div class="max-w-6xl mx-auto w-full">
+            <div class="text-center mb-16">
+                <p class="text-brand-500 font-semibold text-sm tracking-wider uppercase mb-3 fade-up">Under the Hood</p>
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 fade-up">Communication Layers</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto fade-up">
+                    How does data travel from your machine to your screen? Here's each step explained simply.
+                </p>
+            </div>
+
+            <div class="fade-up space-y-4 max-w-4xl mx-auto">
+                <div class="flex items-start gap-4 p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-lg">1</div>
+                    <div>
+                        <h4 class="font-bold text-lg mb-1">Machine → Sensor</h4>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm">Smart sensors are attached to each machine. They read electrical signals, temperature, vibration, and other physical measurements directly from the machine's controller (PLC).</p>
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            <span class="px-2 py-0.5 text-xs rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">Modbus Protocol</span>
+                            <span class="px-2 py-0.5 text-xs rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">OPC-UA Protocol</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-4 p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-cyan-500 text-white flex items-center justify-center font-bold text-lg">2</div>
+                    <div>
+                        <h4 class="font-bold text-lg mb-1">Sensor → IoT Gateway</h4>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm">A small industrial computer (gateway) on the factory floor collects data from all sensors. It acts as the "brain" that gathers everything before sending it out. One gateway can handle 10-50+ machines.</p>
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            <span class="px-2 py-0.5 text-xs rounded bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300">Wired (RS-485)</span>
+                            <span class="px-2 py-0.5 text-xs rounded bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300">Industrial Ethernet</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-4 p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-teal-500 text-white flex items-center justify-center font-bold text-lg">3</div>
+                    <div>
+                        <h4 class="font-bold text-lg mb-1">Gateway → Cloud Server</h4>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm">The gateway sends data to our secure cloud server over the internet. It uses MQTT — a lightweight messaging protocol designed for IoT. Data is encrypted and sent in real-time, every few seconds.</p>
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            <span class="px-2 py-0.5 text-xs rounded bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300">MQTT Protocol</span>
+                            <span class="px-2 py-0.5 text-xs rounded bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300">WiFi / 4G / Ethernet</span>
+                            <span class="px-2 py-0.5 text-xs rounded bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300">TLS Encrypted</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-4 p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-lg">4</div>
+                    <div>
+                        <h4 class="font-bold text-lg mb-1">Cloud Server → Processing & Storage</h4>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm">Our server receives the data, processes it (calculates uptime, detects anomalies, generates alerts), and stores it in a secure database. Historical data is kept for reporting and trend analysis.</p>
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            <span class="px-2 py-0.5 text-xs rounded bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">REST API</span>
+                            <span class="px-2 py-0.5 text-xs rounded bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">WebSocket</span>
+                            <span class="px-2 py-0.5 text-xs rounded bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">Time-Series DB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-4 p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 animate-glow">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-lg">5</div>
+                    <div>
+                        <h4 class="font-bold text-lg mb-1">Server → Live Dashboard (You)</h4>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm">You open a web browser on your phone, tablet, or computer and see everything live. Real-time updates, historical charts, alerts, and batch tracking — all in one beautiful dashboard.</p>
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            <span class="px-2 py-0.5 text-xs rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">Web Dashboard</span>
+                            <span class="px-2 py-0.5 text-xs rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">Mobile Friendly</span>
+                            <span class="px-2 py-0.5 text-xs rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">Real-Time</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== SECTION 9: IMPACT & BENEFITS ==================== -->
+    <section id="impact" class="snap-section grid-bg flex items-center px-6 py-20">
+        <div class="max-w-6xl mx-auto w-full">
+            <div class="text-center mb-16">
+                <p class="text-accent-500 font-semibold text-sm tracking-wider uppercase mb-3 fade-up">Return on Investment</p>
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 fade-up">The Impact on Your Business</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto fade-up">
+                    Smart monitoring doesn't just give you data — it saves you money, time, and headaches.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12 fade-up">
+                <div class="text-center p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
+                    <p class="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-brand-600 counter-value" data-target="30">0%</p>
+                    <p class="text-sm text-gray-500 mt-2">Reduction in Unplanned Downtime</p>
+                </div>
+                <div class="text-center p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
+                    <p class="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-accent-500 to-accent-600 counter-value" data-target="20">0%</p>
+                    <p class="text-sm text-gray-500 mt-2">Energy Cost Savings</p>
+                </div>
+                <div class="text-center p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
+                    <p class="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-purple-600 counter-value" data-target="25">0%</p>
+                    <p class="text-sm text-gray-500 mt-2">Increase in Production Efficiency</p>
+                </div>
+                <div class="text-center p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
+                    <p class="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600 counter-value" data-target="50">0%</p>
+                    <p class="text-sm text-gray-500 mt-2">Faster Problem Detection</p>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="fade-up flex items-start gap-4 p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <div>
+                        <h4 class="font-bold mb-1">Predict Failures Before They Happen</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Temperature rising? Vibration abnormal? Get alerts before a machine breaks down, so you can fix it during planned maintenance — not during production.</p>
+                    </div>
+                </div>
+
+                <div class="fade-up flex items-start gap-4 p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <div>
+                        <h4 class="font-bold mb-1">Know Exactly What's Happening — Anytime</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Open your phone at home and see which machines are running, which batch is behind schedule, and where attention is needed. No phone calls to the floor needed.</p>
+                    </div>
+                </div>
+
+                <div class="fade-up flex items-start gap-4 p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <div>
+                        <h4 class="font-bold mb-1">Cut Energy Waste</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">See exactly which machines are consuming power while idle. Data-driven scheduling reduces unnecessary power consumption and lowers electricity bills.</p>
+                    </div>
+                </div>
+
+                <div class="fade-up flex items-start gap-4 p-6 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <div>
+                        <h4 class="font-bold mb-1">Data-Driven Decisions</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Historical reports show trends — which machine needs replacement, which shift is most productive, which product takes most resources. Make decisions based on facts, not feelings.</p>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-center text-xs text-gray-400 mt-8 fade-up">*Industry-average improvements based on IoT adoption in manufacturing sectors.</p>
+        </div>
+    </section>
+
+    <!-- ==================== SECTION 10: DASHBOARD PREVIEW ==================== -->
+    <section id="dashboard" class="snap-section flex flex-col px-6 py-12" style="scroll-snap-align: start;">
+        <div class="max-w-7xl mx-auto w-full">
+            <div class="text-center mb-10">
+                <p class="text-brand-500 font-semibold text-sm tracking-wider uppercase mb-3 fade-up">Live Preview</p>
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 fade-up">Your Dashboard</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto fade-up">
+                    This is what your factory monitoring dashboard will look like. Real-time data, beautiful charts, instant insights.
+                </p>
+            </div>
+
+            <div class="fade-up rounded-2xl bg-gray-50 dark:bg-gray-900/80 border border-gray-200 dark:border-gray-800 overflow-hidden shadow-2xl">
+                <!-- Dashboard Header -->
+                <div class="px-6 py-4 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></div>
+                        <span class="font-bold text-sm">Craftsman <span class="text-blue-400">Engg.</span></span>
+                        <span class="text-xs text-gray-400">| Factory Floor Monitor</span>
+                    </div>
+                    <div class="flex items-center gap-4 text-xs text-gray-500">
+                        <span class="flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>Live</span>
+                        <span>Last updated: 2s ago</span>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    <!-- Top Stats -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div class="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                            <p class="text-xs text-gray-500 mb-1">Total Machines</p>
+                            <p class="text-2xl font-bold">24</p>
+                            <p class="text-xs text-green-500 mt-1">All connected</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                            <p class="text-xs text-gray-500 mb-1">Running Now</p>
+                            <p class="text-2xl font-bold text-green-500">19</p>
+                            <div class="w-full h-1.5 rounded-full bg-gray-200 dark:bg-gray-700 mt-2">
+                                <div class="h-full rounded-full bg-green-500" style="width: 79%"></div>
+                            </div>
+                        </div>
+                        <div class="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                            <p class="text-xs text-gray-500 mb-1">Today's Output</p>
+                            <p class="text-2xl font-bold">1,847</p>
+                            <p class="text-xs text-green-500 mt-1">+12% vs yesterday</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                            <p class="text-xs text-gray-500 mb-1">Avg OEE</p>
+                            <p class="text-2xl font-bold text-brand-500">78.5%</p>
+                            <p class="text-xs text-green-500 mt-1">+3.2% this week</p>
+                        </div>
+                    </div>
+
+                    <div class="grid md:grid-cols-3 gap-6 mb-6">
+                        <!-- Machine Status Grid -->
+                        <div class="md:col-span-2 p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                            <h4 class="font-bold text-sm mb-4">Machine Status Overview</h4>
+                            <div class="grid grid-cols-3 gap-4 mb-4">
+                                <div>
+                                    <p class="text-xs font-semibold text-brand-500 mb-2">CNC Machines (10)</p>
+                                    <div class="grid grid-cols-5 gap-1">
+                                        <div class="aspect-square rounded bg-green-500/20 border border-green-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-running"></div></div>
+                                        <div class="aspect-square rounded bg-green-500/20 border border-green-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-running"></div></div>
+                                        <div class="aspect-square rounded bg-green-500/20 border border-green-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-running"></div></div>
+                                        <div class="aspect-square rounded bg-yellow-500/20 border border-yellow-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-idle"></div></div>
+                                        <div class="aspect-square rounded bg-green-500/20 border border-green-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-running"></div></div>
+                                        <div class="aspect-square rounded bg-green-500/20 border border-green-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-running"></div></div>
+                                        <div class="aspect-square rounded bg-green-500/20 border border-green-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-running"></div></div>
+                                        <div class="aspect-square rounded bg-red-500/20 border border-red-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-stopped"></div></div>
+                                        <div class="aspect-square rounded bg-green-500/20 border border-green-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-running"></div></div>
+                                        <div class="aspect-square rounded bg-green-500/20 border border-green-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-running"></div></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-semibold text-accent-500 mb-2">VMC Machines (8)</p>
+                                    <div class="grid grid-cols-4 gap-1">
+                                        <div class="aspect-square rounded bg-green-500/20 border border-green-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-running"></div></div>
+                                        <div class="aspect-square rounded bg-green-500/20 border border-green-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-running"></div></div>
+                                        <div class="aspect-square rounded bg-yellow-500/20 border border-yellow-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-idle"></div></div>
+                                        <div class="aspect-square rounded bg-green-500/20 border border-green-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-running"></div></div>
+                                        <div class="aspect-square rounded bg-green-500/20 border border-green-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-running"></div></div>
+                                        <div class="aspect-square rounded bg-green-500/20 border border-green-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-running"></div></div>
+                                        <div class="aspect-square rounded bg-yellow-500/20 border border-yellow-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-idle"></div></div>
+                                        <div class="aspect-square rounded bg-green-500/20 border border-green-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-running"></div></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-semibold text-purple-500 mb-2">Press Machines (6)</p>
+                                    <div class="grid grid-cols-3 gap-1">
+                                        <div class="aspect-square rounded bg-green-500/20 border border-green-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-running"></div></div>
+                                        <div class="aspect-square rounded bg-green-500/20 border border-green-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-running"></div></div>
+                                        <div class="aspect-square rounded bg-green-500/20 border border-green-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-running"></div></div>
+                                        <div class="aspect-square rounded bg-red-500/20 border border-red-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-stopped"></div></div>
+                                        <div class="aspect-square rounded bg-green-500/20 border border-green-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-running"></div></div>
+                                        <div class="aspect-square rounded bg-green-500/20 border border-green-500/30 flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full status-running"></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 text-xs text-gray-500">
+                                <span class="flex items-center gap-1"><div class="w-2 h-2 rounded-full status-running"></div> 19 Running</span>
+                                <span class="flex items-center gap-1"><div class="w-2 h-2 rounded-full status-idle"></div> 3 Idle</span>
+                                <span class="flex items-center gap-1"><div class="w-2 h-2 rounded-full status-stopped"></div> 2 Stopped</span>
+                            </div>
+                        </div>
+
+                        <!-- Active Batches -->
+                        <div class="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                            <h4 class="font-bold text-sm mb-4">Active Batches</h4>
+                            <div class="space-y-3">
+                                <div class="p-3 rounded-lg bg-brand-500/5 dark:bg-brand-500/10 border border-brand-500/20">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-xs font-bold text-brand-500">Batch A</span>
+                                        <span class="text-xs text-gray-500">5 CNC</span>
+                                    </div>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-2">Product: Gear Assembly X</p>
+                                    <div class="w-full h-1.5 rounded-full bg-gray-200 dark:bg-gray-700">
+                                        <div class="h-full rounded-full bg-brand-500" style="width: 68%"></div>
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 mt-1">342/500 parts — 68%</p>
+                                </div>
+                                <div class="p-3 rounded-lg bg-accent-500/5 dark:bg-accent-500/10 border border-accent-500/20">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-xs font-bold text-accent-500">Batch B</span>
+                                        <span class="text-xs text-gray-500">5 CNC</span>
+                                    </div>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-2">Product: Shaft Component Y</p>
+                                    <div class="w-full h-1.5 rounded-full bg-gray-200 dark:bg-gray-700">
+                                        <div class="h-full rounded-full bg-accent-500" style="width: 45%"></div>
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 mt-1">225/500 parts — 45%</p>
+                                </div>
+                                <div class="p-3 rounded-lg bg-purple-500/5 dark:bg-purple-500/10 border border-purple-500/20">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-xs font-bold text-purple-500">Batch C</span>
+                                        <span class="text-xs text-gray-500">6 Press</span>
+                                    </div>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-2">Product: Metal Casing Z</p>
+                                    <div class="w-full h-1.5 rounded-full bg-gray-200 dark:bg-gray-700">
+                                        <div class="h-full rounded-full bg-purple-500" style="width: 82%"></div>
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 mt-1">820/1000 parts — 82%</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-6 mb-6">
+                        <!-- Temperature Chart -->
+                        <div class="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="font-bold text-sm">Temperature (Last 8 Hours)</h4>
+                                <span class="text-xs text-gray-400">CNC-01</span>
+                            </div>
+                            <div class="flex items-end gap-1 h-32">
+                                <div class="flex-1 flex flex-col items-center gap-1"><div class="w-full rounded-t bg-gradient-to-t from-blue-500 to-cyan-400 bar-animate" style="height: 45%"></div><span class="text-[9px] text-gray-400">8AM</span></div>
+                                <div class="flex-1 flex flex-col items-center gap-1"><div class="w-full rounded-t bg-gradient-to-t from-blue-500 to-cyan-400 bar-animate" style="height: 52%; animation-delay: 0.1s"></div><span class="text-[9px] text-gray-400">9AM</span></div>
+                                <div class="flex-1 flex flex-col items-center gap-1"><div class="w-full rounded-t bg-gradient-to-t from-blue-500 to-cyan-400 bar-animate" style="height: 61%; animation-delay: 0.2s"></div><span class="text-[9px] text-gray-400">10AM</span></div>
+                                <div class="flex-1 flex flex-col items-center gap-1"><div class="w-full rounded-t bg-gradient-to-t from-blue-500 to-yellow-400 bar-animate" style="height: 75%; animation-delay: 0.3s"></div><span class="text-[9px] text-gray-400">11AM</span></div>
+                                <div class="flex-1 flex flex-col items-center gap-1"><div class="w-full rounded-t bg-gradient-to-t from-yellow-500 to-orange-400 bar-animate" style="height: 82%; animation-delay: 0.4s"></div><span class="text-[9px] text-gray-400">12PM</span></div>
+                                <div class="flex-1 flex flex-col items-center gap-1"><div class="w-full rounded-t bg-gradient-to-t from-yellow-500 to-orange-400 bar-animate" style="height: 78%; animation-delay: 0.5s"></div><span class="text-[9px] text-gray-400">1PM</span></div>
+                                <div class="flex-1 flex flex-col items-center gap-1"><div class="w-full rounded-t bg-gradient-to-t from-blue-500 to-cyan-400 bar-animate" style="height: 65%; animation-delay: 0.6s"></div><span class="text-[9px] text-gray-400">2PM</span></div>
+                                <div class="flex-1 flex flex-col items-center gap-1"><div class="w-full rounded-t bg-gradient-to-t from-blue-500 to-cyan-400 bar-animate" style="height: 58%; animation-delay: 0.7s"></div><span class="text-[9px] text-gray-400">3PM</span></div>
+                            </div>
+                            <div class="flex justify-between mt-2 text-[10px] text-gray-400">
+                                <span>Normal: 30-60C</span>
+                                <span class="text-orange-500">Warning: 60-80C</span>
+                                <span class="text-red-500">Critical: 80C+</span>
+                            </div>
+                        </div>
+
+                        <!-- Power Consumption -->
+                        <div class="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="font-bold text-sm">Power Consumption (kWh)</h4>
+                                <span class="text-xs text-gray-400">All Machines</span>
+                            </div>
+                            <div class="flex items-end gap-1 h-32">
+                                <div class="flex-1 flex flex-col items-center gap-1"><div class="w-full rounded-t bg-gradient-to-t from-emerald-600 to-emerald-400 bar-animate" style="height: 40%"></div><span class="text-[9px] text-gray-400">Mon</span></div>
+                                <div class="flex-1 flex flex-col items-center gap-1"><div class="w-full rounded-t bg-gradient-to-t from-emerald-600 to-emerald-400 bar-animate" style="height: 55%; animation-delay: 0.1s"></div><span class="text-[9px] text-gray-400">Tue</span></div>
+                                <div class="flex-1 flex flex-col items-center gap-1"><div class="w-full rounded-t bg-gradient-to-t from-emerald-600 to-emerald-400 bar-animate" style="height: 70%; animation-delay: 0.2s"></div><span class="text-[9px] text-gray-400">Wed</span></div>
+                                <div class="flex-1 flex flex-col items-center gap-1"><div class="w-full rounded-t bg-gradient-to-t from-emerald-600 to-emerald-400 bar-animate" style="height: 65%; animation-delay: 0.3s"></div><span class="text-[9px] text-gray-400">Thu</span></div>
+                                <div class="flex-1 flex flex-col items-center gap-1"><div class="w-full rounded-t bg-gradient-to-t from-emerald-600 to-emerald-400 bar-animate" style="height: 80%; animation-delay: 0.4s"></div><span class="text-[9px] text-gray-400">Fri</span></div>
+                                <div class="flex-1 flex flex-col items-center gap-1"><div class="w-full rounded-t bg-gradient-to-t from-emerald-600/50 to-emerald-400/50 bar-animate" style="height: 30%; animation-delay: 0.5s"></div><span class="text-[9px] text-gray-400">Sat</span></div>
+                                <div class="flex-1 flex flex-col items-center gap-1"><div class="w-full rounded-t bg-gradient-to-t from-emerald-600/30 to-emerald-400/30 bar-animate" style="height: 15%; animation-delay: 0.6s"></div><span class="text-[9px] text-gray-400">Sun</span></div>
+                            </div>
+                            <div class="flex justify-between mt-2 text-[10px] text-gray-400">
+                                <span>Total this week: 4,230 kWh</span>
+                                <span class="text-green-500">-8% vs last week</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Uptime Timeline -->
+                    <div class="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                        <h4 class="font-bold text-sm mb-4">Today's Machine Timeline</h4>
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs text-gray-500 w-16 flex-shrink-0">CNC-01</span>
+                                <div class="flex-1 h-5 rounded-full overflow-hidden flex bg-gray-100 dark:bg-gray-700">
+                                    <div class="h-full bg-green-500" style="width: 35%"></div>
+                                    <div class="h-full bg-yellow-500" style="width: 5%"></div>
+                                    <div class="h-full bg-green-500" style="width: 40%"></div>
+                                    <div class="h-full bg-red-500" style="width: 8%"></div>
+                                    <div class="h-full bg-green-500" style="width: 12%"></div>
+                                </div>
+                                <span class="text-xs text-gray-500 w-12 flex-shrink-0 text-right">87%</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs text-gray-500 w-16 flex-shrink-0">VMC-03</span>
+                                <div class="flex-1 h-5 rounded-full overflow-hidden flex bg-gray-100 dark:bg-gray-700">
+                                    <div class="h-full bg-green-500" style="width: 25%"></div>
+                                    <div class="h-full bg-yellow-500" style="width: 10%"></div>
+                                    <div class="h-full bg-green-500" style="width: 50%"></div>
+                                    <div class="h-full bg-yellow-500" style="width: 15%"></div>
+                                </div>
+                                <span class="text-xs text-gray-500 w-12 flex-shrink-0 text-right">75%</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs text-gray-500 w-16 flex-shrink-0">Press-02</span>
+                                <div class="flex-1 h-5 rounded-full overflow-hidden flex bg-gray-100 dark:bg-gray-700">
+                                    <div class="h-full bg-green-500" style="width: 60%"></div>
+                                    <div class="h-full bg-yellow-500" style="width: 3%"></div>
+                                    <div class="h-full bg-green-500" style="width: 30%"></div>
+                                    <div class="h-full bg-yellow-500" style="width: 7%"></div>
+                                </div>
+                                <span class="text-xs text-gray-500 w-12 flex-shrink-0 text-right">90%</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs text-gray-500 w-16 flex-shrink-0">CNC-08</span>
+                                <div class="flex-1 h-5 rounded-full overflow-hidden flex bg-gray-100 dark:bg-gray-700">
+                                    <div class="h-full bg-green-500" style="width: 15%"></div>
+                                    <div class="h-full bg-red-500" style="width: 20%"></div>
+                                    <div class="h-full bg-green-500" style="width: 35%"></div>
+                                    <div class="h-full bg-yellow-500" style="width: 10%"></div>
+                                    <div class="h-full bg-green-500" style="width: 20%"></div>
+                                </div>
+                                <span class="text-xs text-gray-500 w-12 flex-shrink-0 text-right">70%</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-4 text-[10px] text-gray-400 mt-3">
+                            <span class="flex items-center gap-1"><div class="w-2 h-2 rounded bg-green-500"></div> Running</span>
+                            <span class="flex items-center gap-1"><div class="w-2 h-2 rounded bg-yellow-500"></div> Idle</span>
+                            <span class="flex items-center gap-1"><div class="w-2 h-2 rounded bg-red-500"></div> Down</span>
+                            <span class="ml-auto">6:00 AM → Now (3:42 PM)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA Footer -->
+            <div class="mt-12 text-center fade-up">
+                <div class="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-brand-500 to-accent-500 text-white font-bold text-lg shadow-lg">
+                    <span>Ready to Get Started?</span>
+                </div>
+                <p class="text-gray-500 mt-4 text-sm">Craftsman Engg. — Smart Factory Solutions</p>
+                <p class="text-gray-400 text-xs mt-2">Contact us to schedule a demo and discuss your factory's IoT integration.</p>
+                <a href="preview.html" target="_blank" class="inline-flex items-center gap-2 mt-6 px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-brand-400 font-semibold text-sm hover:bg-brand-500/10 hover:border-brand-500/30 transition-all duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    See the UI
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Theme Toggle
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+        });
+
+        // Fade-in on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+        // Nav dots highlight
+        const sections = document.querySelectorAll('section[id]');
+        const navDots = document.querySelectorAll('.nav-dot');
+        const navObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const idx = Array.from(sections).indexOf(entry.target);
+                    navDots.forEach((dot, i) => {
+                        dot.classList.toggle('active', i === idx);
+                        dot.style.opacity = i === idx ? '1' : '0.5';
+                    });
+                }
+            });
+        }, { threshold: 0.5 });
+        sections.forEach(s => navObserver.observe(s));
+
+        // Animated counters
+        const counterObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const el = entry.target;
+                    const target = parseInt(el.dataset.target);
+                    let current = 0;
+                    const increment = target / 60;
+                    const timer = setInterval(() => {
+                        current += increment;
+                        if (current >= target) { current = target; clearInterval(timer); }
+                        el.textContent = Math.floor(current) + '%';
+                    }, 25);
+                    counterObserver.unobserve(el);
+                }
+            });
+        }, { threshold: 0.5 });
+        document.querySelectorAll('.counter-value').forEach(el => counterObserver.observe(el));
+    </script>
+</body>
+</html>
