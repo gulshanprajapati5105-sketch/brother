@@ -290,6 +290,283 @@
         </div>
     </section>
 
+    <!-- ==================== STORY: BEFORE (Without IoT) ==================== -->
+    <section id="story-before" class="snap-section grid-bg flex flex-col items-center justify-center px-6 py-20">
+        <div class="max-w-6xl mx-auto w-full">
+            <div class="text-center mb-12 fade-up">
+                <p class="text-red-500 font-semibold text-sm tracking-wider uppercase mb-3">The Daily Reality</p>
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">Without Smart Monitoring</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">A story every factory manager knows too well</p>
+            </div>
+
+            <div class="slideshow-container fade-up" data-slideshow="before">
+                <!-- Prev Arrow -->
+                <button class="slideshow-arrow prev bg-white dark:bg-gray-800 shadow-lg text-gray-700 dark:text-gray-200" onclick="slideshowPrev('before')" disabled>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <!-- Next Arrow -->
+                <button class="slideshow-arrow next bg-white dark:bg-gray-800 shadow-lg text-gray-700 dark:text-gray-200" onclick="slideshowNext('before')">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
+
+                <div class="slideshow-track">
+                    <!-- Slide 1: The Factory Floor (image left) -->
+                    <div class="slideshow-slide">
+                        <div class="slide-content">
+                            <div class="slide-image">
+                                <div class="image-placeholder bg-red-50 dark:bg-red-950/20 border-2 border-dashed border-red-200 dark:border-red-800 text-red-400">
+                                    <span>Image: Factory Floor</span>
+                                </div>
+                            </div>
+                            <div class="slide-text">
+                                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-semibold mb-4">Step 1 of 7</div>
+                                <h3 class="text-2xl md:text-3xl font-bold mb-4">The Factory Floor</h3>
+                                <p class="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">A busy factory with 20+ CNC machines. Operators at their stations. The hum of production. Everything looks like it's running fine — but is it?</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 2: The Owner's Call (image right / reverse) -->
+                    <div class="slideshow-slide">
+                        <div class="slide-content reverse">
+                            <div class="slide-image">
+                                <div class="image-placeholder bg-red-50 dark:bg-red-950/20 border-2 border-dashed border-red-200 dark:border-red-800 text-red-400">
+                                    <span>Image: Owner's Call</span>
+                                </div>
+                            </div>
+                            <div class="slide-text">
+                                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-semibold mb-4">Step 2 of 7</div>
+                                <h3 class="text-2xl md:text-3xl font-bold mb-4">The Owner's Call</h3>
+                                <p class="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">Owner picks up the phone and calls the manager: <strong class="text-gray-900 dark:text-white">"How many machines are running right now? How many are switched off?"</strong></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 3: More Questions (image left) -->
+                    <div class="slideshow-slide">
+                        <div class="slide-content">
+                            <div class="slide-image">
+                                <div class="image-placeholder bg-red-50 dark:bg-red-950/20 border-2 border-dashed border-red-200 dark:border-red-800 text-red-400">
+                                    <span>Image: Questions Pile Up</span>
+                                </div>
+                            </div>
+                            <div class="slide-text">
+                                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-semibold mb-4">Step 3 of 7</div>
+                                <h3 class="text-2xl md:text-3xl font-bold mb-4">More Questions Pile Up</h3>
+                                <p class="text-gray-600 dark:text-gray-400 text-lg leading-relaxed"><strong class="text-gray-900 dark:text-white">"Which batch is each machine working on? How many pieces are done? What about voltage and temperature?"</strong> The questions keep coming.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 4: The Manual Count (image right / reverse) -->
+                    <div class="slideshow-slide">
+                        <div class="slide-content reverse">
+                            <div class="slide-image">
+                                <div class="image-placeholder bg-red-50 dark:bg-red-950/20 border-2 border-dashed border-red-200 dark:border-red-800 text-red-400">
+                                    <span>Image: Manual Count</span>
+                                </div>
+                            </div>
+                            <div class="slide-text">
+                                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-semibold mb-4">Step 4 of 7</div>
+                                <h3 class="text-2xl md:text-3xl font-bold mb-4">The Manual Count</h3>
+                                <p class="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">Manager puts down the phone, grabs a clipboard, and starts walking machine to machine. Checking each one. Asking operators. Writing on paper.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 5: Hours Pass (image left) -->
+                    <div class="slideshow-slide">
+                        <div class="slide-content">
+                            <div class="slide-image">
+                                <div class="image-placeholder bg-red-50 dark:bg-red-950/20 border-2 border-dashed border-red-200 dark:border-red-800 text-red-400">
+                                    <span>Image: Hours Pass</span>
+                                </div>
+                            </div>
+                            <div class="slide-text">
+                                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-semibold mb-4">Step 5 of 7</div>
+                                <h3 class="text-2xl md:text-3xl font-bold mb-4">Hours Pass...</h3>
+                                <p class="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">The owner is still waiting. It's been <strong class="text-gray-900 dark:text-white">2 hours</strong>. Meanwhile, machines have changed status — some stopped, some started. The data is already stale.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 6: Report Has Errors (image right / reverse) -->
+                    <div class="slideshow-slide">
+                        <div class="slide-content reverse">
+                            <div class="slide-image">
+                                <div class="image-placeholder bg-red-50 dark:bg-red-950/20 border-2 border-dashed border-red-200 dark:border-red-800 text-red-400">
+                                    <span>Image: Report Errors</span>
+                                </div>
+                            </div>
+                            <div class="slide-text">
+                                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-semibold mb-4">Step 6 of 7</div>
+                                <h3 class="text-2xl md:text-3xl font-bold mb-4">The Report Has Errors</h3>
+                                <p class="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">Manager finally calls back with numbers. But 3 machines changed state while he was counting. The numbers don't add up. <strong class="text-red-500">Owner is frustrated.</strong></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 7: Every Single Day (image left) -->
+                    <div class="slideshow-slide">
+                        <div class="slide-content">
+                            <div class="slide-image">
+                                <div class="image-placeholder bg-red-50 dark:bg-red-950/20 border-2 border-dashed border-red-200 dark:border-red-800 text-red-400">
+                                    <span>Image: Every Single Day</span>
+                                </div>
+                            </div>
+                            <div class="slide-text">
+                                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-semibold mb-4">Step 7 of 7</div>
+                                <h3 class="text-2xl md:text-3xl font-bold mb-4">Every. Single. Day.</h3>
+                                <p class="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">This isn't a one-time problem. This is the <strong class="text-gray-900 dark:text-white">daily reality</strong>. The manager dreads the owner's call. The owner can never trust the numbers. Decisions are based on guesswork.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dots -->
+                <div class="slideshow-dots" data-dots="before">
+                    <button class="bg-red-500 active" onclick="slideshowGo('before',0)"></button>
+                    <button class="bg-red-500" onclick="slideshowGo('before',1)"></button>
+                    <button class="bg-red-500" onclick="slideshowGo('before',2)"></button>
+                    <button class="bg-red-500" onclick="slideshowGo('before',3)"></button>
+                    <button class="bg-red-500" onclick="slideshowGo('before',4)"></button>
+                    <button class="bg-red-500" onclick="slideshowGo('before',5)"></button>
+                    <button class="bg-red-500" onclick="slideshowGo('before',6)"></button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== STORY: AFTER (With IoT) ==================== -->
+    <section id="story-after" class="snap-section grid-bg flex flex-col items-center justify-center px-6 py-20">
+        <div class="max-w-6xl mx-auto w-full">
+            <div class="text-center mb-12 fade-up">
+                <p class="text-accent-500 font-semibold text-sm tracking-wider uppercase mb-3">The Smart Way</p>
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">Now Imagine This Instead...</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">Same factory, same questions — completely different experience</p>
+            </div>
+
+            <div class="slideshow-container fade-up" data-slideshow="after">
+                <!-- Prev Arrow -->
+                <button class="slideshow-arrow prev bg-white dark:bg-gray-800 shadow-lg text-gray-700 dark:text-gray-200" onclick="slideshowPrev('after')" disabled>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <!-- Next Arrow -->
+                <button class="slideshow-arrow next bg-white dark:bg-gray-800 shadow-lg text-gray-700 dark:text-gray-200" onclick="slideshowNext('after')">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
+
+                <div class="slideshow-track">
+                    <!-- Slide 1: Same Question (image left) -->
+                    <div class="slideshow-slide">
+                        <div class="slide-content">
+                            <div class="slide-image">
+                                <div class="image-placeholder bg-green-50 dark:bg-green-950/20 border-2 border-dashed border-green-200 dark:border-green-800 text-green-500">
+                                    <span>Image: Same Question</span>
+                                </div>
+                            </div>
+                            <div class="slide-text">
+                                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-semibold mb-4">Step 1 of 6</div>
+                                <h3 class="text-2xl md:text-3xl font-bold mb-4">Same Question</h3>
+                                <p class="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">Owner asks: <strong class="text-gray-900 dark:text-white">"What's the factory status?"</strong> Same question as before. But this time, the answer is seconds away.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 2: Instant Answer (image right / reverse) -->
+                    <div class="slideshow-slide">
+                        <div class="slide-content reverse">
+                            <div class="slide-image">
+                                <div class="image-placeholder bg-green-50 dark:bg-green-950/20 border-2 border-dashed border-green-200 dark:border-green-800 text-green-500">
+                                    <span>Image: Instant Answer</span>
+                                </div>
+                            </div>
+                            <div class="slide-text">
+                                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-semibold mb-4">Step 2 of 6</div>
+                                <h3 class="text-2xl md:text-3xl font-bold mb-4">Instant Answer</h3>
+                                <p class="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">Manager pulls out his phone, opens the app. Within <strong class="text-accent-500">5 seconds</strong>: "12 machines running, 3 idle, 2 in maintenance. Batch #47 is 78% complete."</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 3: Every Detail (image left) -->
+                    <div class="slideshow-slide">
+                        <div class="slide-content">
+                            <div class="slide-image">
+                                <div class="image-placeholder bg-green-50 dark:bg-green-950/20 border-2 border-dashed border-green-200 dark:border-green-800 text-green-500">
+                                    <span>Image: Every Detail</span>
+                                </div>
+                            </div>
+                            <div class="slide-text">
+                                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-semibold mb-4">Step 3 of 6</div>
+                                <h3 class="text-2xl md:text-3xl font-bold mb-4">Every Detail, One Tap</h3>
+                                <p class="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">Tap any machine on the dashboard — see temperature, voltage, RPM, output count, batch info. <strong class="text-gray-900 dark:text-white">All live data.</strong> No walking around needed.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 4: Owner Checks From Anywhere (image right / reverse) -->
+                    <div class="slideshow-slide">
+                        <div class="slide-content reverse">
+                            <div class="slide-image">
+                                <div class="image-placeholder bg-green-50 dark:bg-green-950/20 border-2 border-dashed border-green-200 dark:border-green-800 text-green-500">
+                                    <span>Image: From Anywhere</span>
+                                </div>
+                            </div>
+                            <div class="slide-text">
+                                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-semibold mb-4">Step 4 of 6</div>
+                                <h3 class="text-2xl md:text-3xl font-bold mb-4">Owner Checks From Anywhere</h3>
+                                <p class="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">The owner doesn't even need to call. He opens the same app from home, from his car, from the office. He sees everything the manager sees. <strong class="text-gray-900 dark:text-white">Real-time, always accurate.</strong></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 5: Alerts Come to You (image left) -->
+                    <div class="slideshow-slide">
+                        <div class="slide-content">
+                            <div class="slide-image">
+                                <div class="image-placeholder bg-green-50 dark:bg-green-950/20 border-2 border-dashed border-green-200 dark:border-green-800 text-green-500">
+                                    <span>Image: Alerts</span>
+                                </div>
+                            </div>
+                            <div class="slide-text">
+                                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-semibold mb-4">Step 5 of 6</div>
+                                <h3 class="text-2xl md:text-3xl font-bold mb-4">Alerts Come to You</h3>
+                                <p class="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">Machine overheating? Unexpected shutdown? You get a <strong class="text-gray-900 dark:text-white">notification instantly</strong>. Problems find you — you don't have to discover them.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 6: Confidence & Control (image right / reverse) -->
+                    <div class="slideshow-slide">
+                        <div class="slide-content reverse">
+                            <div class="slide-image">
+                                <div class="image-placeholder bg-green-50 dark:bg-green-950/20 border-2 border-dashed border-green-200 dark:border-green-800 text-green-500">
+                                    <span>Image: Confidence</span>
+                                </div>
+                            </div>
+                            <div class="slide-text">
+                                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-semibold mb-4">Step 6 of 6</div>
+                                <h3 class="text-2xl md:text-3xl font-bold mb-4">Confidence & Control</h3>
+                                <p class="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">Every number is accurate. Every decision is data-driven. The owner trusts the reports. The manager is free to <strong class="text-accent-500">focus on real work</strong>, not counting machines.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dots -->
+                <div class="slideshow-dots" data-dots="after">
+                    <button class="bg-accent-500 active" onclick="slideshowGo('after',0)"></button>
+                    <button class="bg-accent-500" onclick="slideshowGo('after',1)"></button>
+                    <button class="bg-accent-500" onclick="slideshowGo('after',2)"></button>
+                    <button class="bg-accent-500" onclick="slideshowGo('after',3)"></button>
+                    <button class="bg-accent-500" onclick="slideshowGo('after',4)"></button>
+                    <button class="bg-accent-500" onclick="slideshowGo('after',5)"></button>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- ==================== SECTION 2: WHAT IS IoT ==================== -->
     <section id="what-is-iot" class="snap-section grid-bg flex items-center px-6 py-20">
         <div class="max-w-6xl mx-auto w-full">
