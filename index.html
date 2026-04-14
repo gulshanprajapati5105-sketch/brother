@@ -1921,6 +1921,75 @@
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
         });
 
+        // Slideshow logic
+        const slideshows = {};
+
+        function initSlideshow(name) {
+            const container = document.querySelector('[data-slideshow="' + name + '"]');
+            if (!container) return;
+            const track = container.querySelector('.slideshow-track');
+            const slides = track.querySelectorAll('.slideshow-slide');
+            const dots = container.querySelector('.slideshow-dots').querySelectorAll('button');
+            const prevBtn = container.querySelector('.slideshow-arrow.prev');
+            const nextBtn = container.querySelector('.slideshow-arrow.next');
+
+            slideshows[name] = { track, slides, dots, prevBtn, nextBtn, current: 0, total: slides.length };
+            updateSlideshow(name);
+        }
+
+        function updateSlideshow(name) {
+            const s = slideshows[name];
+            if (!s) return;
+            s.track.style.transform = 'translateX(-' + (s.current * 100) + '%)';
+            s.prevBtn.disabled = s.current === 0;
+            s.nextBtn.disabled = s.current === s.total - 1;
+            s.dots.forEach(function(dot, i) {
+                dot.classList.toggle('active', i === s.current);
+            });
+        }
+
+        function slideshowNext(name) {
+            const s = slideshows[name];
+            if (!s || s.current >= s.total - 1) return;
+            s.current++;
+            updateSlideshow(name);
+        }
+
+        function slideshowPrev(name) {
+            const s = slideshows[name];
+            if (!s || s.current <= 0) return;
+            s.current--;
+            updateSlideshow(name);
+        }
+
+        function slideshowGo(name, index) {
+            const s = slideshows[name];
+            if (!s || index < 0 || index >= s.total) return;
+            s.current = index;
+            updateSlideshow(name);
+        }
+
+        // Keyboard navigation for slideshows
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                var visible = null;
+                Object.keys(slideshows).forEach(function(name) {
+                    var container = document.querySelector('[data-slideshow="' + name + '"]');
+                    var rect = container.getBoundingClientRect();
+                    if (rect.top < window.innerHeight * 0.5 && rect.bottom > window.innerHeight * 0.5) {
+                        visible = name;
+                    }
+                });
+                if (visible) {
+                    if (e.key === 'ArrowLeft') slideshowPrev(visible);
+                    if (e.key === 'ArrowRight') slideshowNext(visible);
+                }
+            }
+        });
+
+        initSlideshow('before');
+        initSlideshow('after');
+
         // Fade-in on scroll
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
