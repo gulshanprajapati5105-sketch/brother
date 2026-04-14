@@ -21,4 +21,12 @@ jobs:
           aws-region: us-east-1
 
       - name: Deploy to S3
-        run: aws s3 sync . s3://preview.craftsmanengg.com/ --exclude ".git/*" --exclude ".github/*" --exclude ".claude/*" --content-type "text/html"
+        run: |
+          aws s3 sync . s3://preview.craftsmanengg.com/ \
+            --exclude ".git/*" \
+            --exclude ".github/*" \
+            --exclude ".claude/*" \
+            --exclude ".superpowers/*" \
+            --exclude ".DS_Store" \
+            --exclude "docs/*" \
+            --delete
