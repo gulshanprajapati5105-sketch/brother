@@ -292,61 +292,59 @@
     </section>
 
     <!-- ==================== STORY: BEFORE & AFTER ==================== -->
-    <section id="story" class="snap-section grid-bg flex flex-col items-center justify-center px-6 py-20">
-        <div class="max-w-6xl mx-auto w-full">
-            <div class="text-center mb-12 fade-up">
-                <p class="text-brand-500 font-semibold text-sm tracking-wider uppercase mb-3">See The Difference</p>
-                <h2 class="text-4xl md:text-5xl font-bold mb-4">Before & After Smart Monitoring</h2>
-                <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">Same factory, same questions — completely different experience</p>
+    <section id="story" class="snap-section grid-bg flex flex-col items-center justify-center py-20">
+        <div class="text-center mb-12 fade-up px-6">
+            <p class="text-brand-500 font-semibold text-sm tracking-wider uppercase mb-3">See The Difference</p>
+            <h2 class="text-4xl md:text-5xl font-bold mb-4">Before & After Smart Monitoring</h2>
+            <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">Same factory, same questions — completely different experience</p>
+        </div>
+
+        <div class="slideshow-container fade-up w-full" data-slideshow="story">
+            <!-- Prev Arrow -->
+            <button class="slideshow-arrow prev bg-white dark:bg-gray-800 shadow-lg text-gray-700 dark:text-gray-200" onclick="slideshowPrev('story')" disabled>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <!-- Next Arrow -->
+            <button class="slideshow-arrow next bg-white dark:bg-gray-800 shadow-lg text-gray-700 dark:text-gray-200" onclick="slideshowNext('story')">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>
+
+            <div class="slideshow-track">
+                <!-- Slide 1: BEFORE -->
+                <div class="slideshow-slide" style="padding:0;">
+                    <div class="text-center mb-8 px-6">
+                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-semibold mb-4">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                            Without Smart Monitoring
+                        </div>
+                        <h3 class="text-2xl md:text-3xl font-bold mb-3">The Daily Struggle</h3>
+                        <p class="text-gray-600 dark:text-gray-400 text-base max-w-3xl mx-auto leading-relaxed">Owner calls the manager asking how many machines are running, which batch they're on, output counts, voltage, temperature... The manager walks machine to machine with a clipboard, takes hours to count, and the numbers are already wrong by the time he reports back. <strong class="text-red-500">This happens every single day.</strong></p>
+                    </div>
+                    <div class="overflow-hidden">
+                        <img src="image/before.png" alt="Before: Manual factory monitoring struggle — owner calling, manager counting with clipboard, errors in reports, daily frustration" class="w-full h-auto" loading="lazy">
+                    </div>
+                </div>
+
+                <!-- Slide 2: AFTER -->
+                <div class="slideshow-slide" style="padding:0;">
+                    <div class="text-center mb-8 px-6">
+                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-sm font-semibold mb-4">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            With Smart Monitoring
+                        </div>
+                        <h3 class="text-2xl md:text-3xl font-bold mb-3">Now Imagine This Instead</h3>
+                        <p class="text-gray-600 dark:text-gray-400 text-base max-w-3xl mx-auto leading-relaxed">Same question from the owner — but now the manager opens a mobile app and answers in <strong class="text-accent-500">5 seconds</strong>. Every detail is one tap away. The owner can check from anywhere — home, car, office. Alerts notify you before problems become costly. <strong class="text-accent-500">Accurate data, real confidence.</strong></p>
+                    </div>
+                    <div class="overflow-hidden">
+                        <img src="image/after.png" alt="After: Smart IoT monitoring — instant answers on phone, remote access, smart alerts, confidence and control" class="w-full h-auto" loading="lazy">
+                    </div>
+                </div>
             </div>
 
-            <div class="slideshow-container fade-up" data-slideshow="story">
-                <!-- Prev Arrow -->
-                <button class="slideshow-arrow prev bg-white dark:bg-gray-800 shadow-lg text-gray-700 dark:text-gray-200" onclick="slideshowPrev('story')" disabled>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                </button>
-                <!-- Next Arrow -->
-                <button class="slideshow-arrow next bg-white dark:bg-gray-800 shadow-lg text-gray-700 dark:text-gray-200" onclick="slideshowNext('story')">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </button>
-
-                <div class="slideshow-track">
-                    <!-- Slide 1: BEFORE -->
-                    <div class="slideshow-slide">
-                        <div class="text-center mb-8">
-                            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-semibold mb-4">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
-                                Without Smart Monitoring
-                            </div>
-                            <h3 class="text-2xl md:text-3xl font-bold mb-3">The Daily Struggle</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-base max-w-3xl mx-auto leading-relaxed">Owner calls the manager asking how many machines are running, which batch they're on, output counts, voltage, temperature... The manager walks machine to machine with a clipboard, takes hours to count, and the numbers are already wrong by the time he reports back. <strong class="text-red-500">This happens every single day.</strong></p>
-                        </div>
-                        <div class="rounded-2xl overflow-hidden border border-red-200 dark:border-red-800 shadow-lg">
-                            <img src="image/before.png" alt="Before: Manual factory monitoring struggle — owner calling, manager counting with clipboard, errors in reports, daily frustration" class="w-full h-auto" loading="lazy">
-                        </div>
-                    </div>
-
-                    <!-- Slide 2: AFTER -->
-                    <div class="slideshow-slide">
-                        <div class="text-center mb-8">
-                            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-sm font-semibold mb-4">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                With Smart Monitoring
-                            </div>
-                            <h3 class="text-2xl md:text-3xl font-bold mb-3">Now Imagine This Instead</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-base max-w-3xl mx-auto leading-relaxed">Same question from the owner — but now the manager opens a mobile app and answers in <strong class="text-accent-500">5 seconds</strong>. Every detail is one tap away. The owner can check from anywhere — home, car, office. Alerts notify you before problems become costly. <strong class="text-accent-500">Accurate data, real confidence.</strong></p>
-                        </div>
-                        <div class="rounded-2xl overflow-hidden border border-green-200 dark:border-green-800 shadow-lg">
-                            <img src="image/after.png" alt="After: Smart IoT monitoring — instant answers on phone, remote access, smart alerts, confidence and control" class="w-full h-auto" loading="lazy">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Dots -->
-                <div class="slideshow-dots" data-dots="story">
-                    <button class="bg-red-500 active" onclick="slideshowGo('story',0)"></button>
-                    <button class="bg-accent-500" onclick="slideshowGo('story',1)"></button>
-                </div>
+            <!-- Dots -->
+            <div class="slideshow-dots" data-dots="story">
+                <button class="bg-red-500 active" onclick="slideshowGo('story',0)"></button>
+                <button class="bg-accent-500" onclick="slideshowGo('story',1)"></button>
             </div>
         </div>
     </section>
