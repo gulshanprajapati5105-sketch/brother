@@ -1,499 +1,833 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" data-theme="dark">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Craftsman Engg. — Factory Dashboard</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Craftsman Engg. — CNC Factory Monitor</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config={darkMode:'class'}</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-*{font-family:'Inter',sans-serif}
+/* ===== DARK THEME (default) ===== */
+:root{
+  --bg-0:#050a12;--bg-1:#0a1120;--bg-2:#111b2e;--bg-3:#182540;
+  --border:#1a2744;--border-h:#2a3a5c;
+  --t1:#e8edf5;--t2:#94a3b8;--t3:#546380;
+  --accent:#06d6f2;--accent-d:#0891b2;
+  --run:#34d399;--idle:#fbbf24;--stop:#f87171;--maint:#a78bfa;
+  --header-bg:rgba(10,17,32,.88);
+  --sidebar-shadow:rgba(0,0,0,.5);
+  --dot-color:rgba(6,214,242,.025);
+  --row-hover:rgba(6,214,242,.03);
+  --td-border:rgba(26,39,68,.5);
+}
+
+/* ===== LIGHT THEME ===== */
+[data-theme="light"]{
+  --bg-0:#f1f5f9;--bg-1:#ffffff;--bg-2:#ffffff;--bg-3:#f8fafc;
+  --border:#e2e8f0;--border-h:#cbd5e1;
+  --t1:#0f172a;--t2:#475569;--t3:#94a3b8;
+  --accent:#0891b2;--accent-d:#0e7490;
+  --run:#059669;--idle:#d97706;--stop:#dc2626;--maint:#7c3aed;
+  --header-bg:rgba(255,255,255,.88);
+  --sidebar-shadow:rgba(0,0,0,.08);
+  --dot-color:rgba(0,0,0,.04);
+  --row-hover:rgba(8,145,178,.04);
+  --td-border:rgba(226,232,240,.8);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Chakra Petch',sans-serif}
+body{background:var(--bg-0);color:var(--t1);min-height:100vh;
+  background-image:radial-gradient(circle at 1px 1px,var(--dot-color) 1px,transparent 0);background-size:48px 48px;
+  transition:background .3s,color .3s}
+.fm{font-family:'Inter',sans-serif}
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:rgba(42,139,255,.2);border-radius:3px}
-.bar-grow{animation:bg .8s ease-out forwards;transform-origin:bottom}
-@keyframes bg{from{transform:scaleY(0)}to{transform:scaleY(1)}}
-.fade-in{animation:fi .3s ease-out}
-@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.donut-seg{transition:stroke-dashoffset .8s ease}
-.slide-in{animation:si .3s ease-out}
-@keyframes si{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+::-webkit-scrollbar-thumb{background:rgba(8,145,178,.2);border-radius:3px}
+
+/* Sidebar */
+#sidebar{width:68px;transition:width .28s cubic-bezier(.4,0,.2,1),background .3s;background:var(--bg-1);border-right:1px solid var(--border)}
+#sidebar:hover{width:230px;box-shadow:6px 0 32px var(--sidebar-shadow)}
+#sidebar .nl{opacity:0;transition:opacity .18s;white-space:nowrap;overflow:hidden}
+#sidebar:hover .nl{opacity:1}
+.nb{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:12px;border:none;cursor:pointer;font-size:13px;font-weight:500;transition:all .2s;background:transparent;color:var(--t3)}
+.nb:hover{background:rgba(8,145,178,.06);color:var(--t2)}
+.nb.active{background:rgba(8,145,178,.1);color:var(--accent)}
+.nb svg{flex-shrink:0;width:20px;height:20px}
+
+/* Animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.card-e{animation:fadeUp .45s ease forwards;opacity:0}
+.view-e{animation:fadeIn .3s ease}
+
+/* Cards */
+.mc{transition:all .25s ease;cursor:pointer;position:relative;overflow:hidden}
+.mc::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;border-radius:0 2px 2px 0;transition:box-shadow .3s}
+.mc:hover{transform:translateY(-3px)}
+[data-theme="light"] .mc:hover{box-shadow:0 8px 24px rgba(0,0,0,.08)}
+[data-theme="light"] .rounded-2xl[style*="bg-2"],[data-theme="light"] .rounded-2xl{box-shadow:0 1px 3px rgba(0,0,0,.06)}
+
+/* Tabs */
+.tab-btn{padding:8px 18px;border-radius:10px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all .2s;background:transparent;color:var(--t3)}
+.tab-btn:hover{color:var(--t2)}
+.tab-btn.active{background:rgba(8,145,178,.12);color:var(--accent)}
+
+/* Table */
+.tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:12px}
+.tbl th{text-align:left;padding:10px 14px;color:var(--t3);font-weight:600;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.tbl td{padding:10px 14px;border-bottom:1px solid var(--td-border)}
+.tbl tr:hover td{background:var(--row-hover)}
+
+/* Input */
+.sinput{background:var(--bg-3);border:1px solid var(--border);border-radius:10px;padding:8px 14px 8px 36px;color:var(--t1);font-size:12px;outline:none;transition:border .2s,background .3s;width:100%}
+.sinput:focus{border-color:var(--accent)}
+.sinput::placeholder{color:var(--t3)}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600}
+
+/* Theme toggle */
+.theme-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--bg-3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;font-size:16px;line-height:1}
+.theme-btn:hover{border-color:var(--accent);background:rgba(8,145,178,.08)}
+
+/* Smooth transitions for theme-aware elements */
+header,.rounded-2xl,.rounded-xl{transition:background .3s,border-color .3s,color .3s}
 </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen">
+<body>
 
-<!-- HEADER -->
-<header class="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800">
-<div class="max-w-[1400px] mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
-    <div class="flex items-center gap-6">
-        <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div><span class="font-bold text-sm">Craftsman <span class="text-blue-500">Engg.</span></span></div>
-        <nav class="hidden md:flex gap-1 text-xs">
-            <a href="#" class="px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-500 font-semibold">Dashboard</a>
-            <a href="#" class="px-3 py-1.5 rounded-lg text-gray-500 hover:text-gray-300">Machines</a>
-            <a href="#" class="px-3 py-1.5 rounded-lg text-gray-500 hover:text-gray-300">Batches</a>
-            <a href="#" class="px-3 py-1.5 rounded-lg text-gray-500 hover:text-gray-300">Reports</a>
-            <a href="#" class="px-3 py-1.5 rounded-lg text-gray-500 hover:text-gray-300">Alerts</a>
-        </nav>
+<!-- SIDEBAR -->
+<aside id="sidebar" class="fixed left-0 top-0 bottom-0 z-50 flex flex-col overflow-hidden">
+  <div class="h-16 flex items-center px-5 border-b" style="border-color:var(--border)">
+    <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,var(--accent),var(--accent-d))">
+      <svg class="w-4 h-4" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <span class="nl ml-3 font-bold text-sm" style="color:var(--accent)">Craftsman Engg.</span>
+  </div>
+  <nav class="flex-1 py-4 px-2.5 space-y-1" id="sidebar-nav">
+    <button class="nb active" data-page="dashboard" onclick="navigate('dashboard')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      <span class="nl">Dashboard</span>
+    </button>
+    <button class="nb" data-page="alarms" onclick="navigate('alarms')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <span class="nl">Alarm Reports</span>
+    </button>
+    <button class="nb" data-page="logs" onclick="navigate('logs')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span class="nl">Logs</span>
+    </button>
+    <button class="nb" data-page="users" onclick="navigate('users')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      <span class="nl">Users</span>
+    </button>
+    <button class="nb" data-page="loto" onclick="navigate('loto')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      <span class="nl">LOTO</span>
+    </button>
+    <button class="nb" data-page="settings" onclick="navigate('settings')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      <span class="nl">Settings</span>
+    </button>
+  </nav>
+  <div class="p-3 border-t" style="border-color:var(--border)">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-[11px] font-bold" style="background:linear-gradient(135deg,var(--accent-d),#6366f1);color:#fff">GP</div>
+      <div class="nl"><p class="text-xs font-semibold">Gulshan P.</p><p class="text-[10px]" style="color:var(--t3)">Admin</p></div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div id="app" class="min-h-screen transition-all" style="margin-left:68px">
+  <header class="sticky top-0 z-40 h-14 flex items-center justify-between px-6 border-b" style="background:var(--header-bg);border-color:var(--border);backdrop-filter:blur(16px)">
+    <div>
+      <h1 id="page-title" class="text-base font-bold tracking-wide">Dashboard</h1>
+      <p class="text-[10px] fm" style="color:var(--t3)">Real-time factory monitoring</p>
     </div>
     <div class="flex items-center gap-3">
-        <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/20"><div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div><span class="text-[10px] font-medium text-green-400">Live</span></div>
-        <span class="hidden sm:block text-[10px] text-gray-400">Updated 2s ago</span>
-        <button onclick="document.documentElement.classList.toggle('dark')" class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs">🌓</button>
-        <div class="w-8 h-8 rounded-lg bg-blue-500 text-white flex items-center justify-center text-xs font-bold">KE</div>
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-full" style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2)">
+        <span class="w-2 h-2 rounded-full animate-pulse" style="background:var(--run)"></span>
+        <span class="text-[11px] font-semibold" style="color:var(--run)">Live</span>
+      </div>
+      <span class="text-[10px] fm hidden sm:block" style="color:var(--t3)" id="clock"></span>
+      <button onclick="toggleTheme()" class="theme-btn" id="theme-toggle" title="Toggle dark/light mode">
+        <span id="theme-icon">&#9789;</span>
+      </button>
     </div>
-</div>
-</header>
-
-<main class="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 space-y-6">
-
-<!-- FILTERS -->
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-    <div id="filter-tabs" class="flex items-center gap-2"></div>
-    <div class="flex items-center gap-2">
-        <div id="date-tabs" class="flex bg-gray-100 dark:bg-gray-800/50 rounded-xl p-0.5"></div>
-        <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800/50 text-[11px] text-gray-500">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            <span id="date-range">Apr 5 — Apr 12</span>
-        </div>
-    </div>
-</div>
-
-<!-- SUMMARY CARDS -->
-<div id="summary-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-4"></div>
-
-<!-- STATUS BADGES -->
-<div id="status-badges" class="flex flex-wrap gap-3"></div>
-
-<!-- MAIN GRID -->
-<div class="grid lg:grid-cols-3 gap-6">
-    <div class="lg:col-span-2 space-y-6">
-        <!-- Machine Grid -->
-        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="font-bold text-sm">Machine Status <span class="text-gray-400 font-normal text-xs">(click any machine for details)</span></h3>
-                <div class="flex gap-4 text-[10px] text-gray-400">
-                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full" style="background:#10b981;box-shadow:0 0 6px rgba(16,185,129,.5)"></span> Running</span>
-                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full" style="background:#f59e0b;box-shadow:0 0 6px rgba(245,158,11,.5)"></span> Idle</span>
-                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full" style="background:#ef4444;box-shadow:0 0 6px rgba(239,68,68,.5)"></span> Stopped</span>
-                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full" style="background:#8b5cf6;box-shadow:0 0 6px rgba(139,92,246,.5)"></span> Maint.</span>
-                </div>
-            </div>
-            <div id="machine-grid" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2"></div>
-        </div>
-        <!-- Charts Row -->
-        <div class="grid md:grid-cols-2 gap-6">
-            <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
-                <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-sm">Production Output</h3><span class="text-[10px] text-gray-400" id="lbl-prod">Last 7 days</span></div>
-                <div id="chart-prod" class="flex items-end gap-1.5 h-36"></div>
-            </div>
-            <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
-                <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-sm">Power Consumption (kWh)</h3><span class="text-[10px] text-gray-400" id="lbl-pow">Last 7 days</span></div>
-                <div id="chart-pow" class="flex items-end gap-1.5 h-36"></div>
-            </div>
-        </div>
-        <!-- Summary Donut + Pie Row -->
-        <div class="grid md:grid-cols-2 gap-6">
-            <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
-                <h3 class="font-bold text-sm mb-4">Machine Status Distribution</h3>
-                <div class="flex items-center gap-6">
-                    <div class="relative w-32 h-32 flex-shrink-0"><svg id="donut-status" viewBox="0 0 120 120" class="w-full h-full -rotate-90"></svg><div class="absolute inset-0 flex flex-col items-center justify-center"><span id="donut-center" class="text-xl font-black">24</span><span class="text-[9px] text-gray-400">total</span></div></div>
-                    <div id="donut-legend" class="space-y-2 text-xs"></div>
-                </div>
-            </div>
-            <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
-                <h3 class="font-bold text-sm mb-4">Jobs by Machine Type</h3>
-                <div class="flex items-center gap-6">
-                    <div class="relative w-32 h-32 flex-shrink-0"><svg id="pie-jobs" viewBox="0 0 120 120" class="w-full h-full -rotate-90"></svg></div>
-                    <div id="pie-legend" class="space-y-2 text-xs"></div>
-                </div>
-            </div>
-        </div>
-        <!-- Timeline -->
-        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
-            <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-sm">Today's Machine Timeline</h3><span class="text-[10px] text-gray-400">6:00 AM → Now</span></div>
-            <div id="timeline" class="space-y-2"></div>
-            <div class="flex gap-4 text-[10px] text-gray-400 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
-                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded" style="background:#10b981"></span> Running</span>
-                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded" style="background:#f59e0b"></span> Idle</span>
-                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded" style="background:#ef4444"></span> Down</span>
-                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded" style="background:#8b5cf6"></span> Maintenance</span>
-            </div>
-        </div>
-    </div>
-    <!-- RIGHT SIDEBAR -->
-    <div class="space-y-6">
-        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
-            <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-sm">Active Batches</h3><span id="batch-count" class="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 font-medium">6 active</span></div>
-            <div id="batches" class="space-y-3"></div>
-        </div>
-        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
-            <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-sm">Recent Alerts</h3><span id="alert-count" class="text-[10px] px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 font-medium">5</span></div>
-            <div id="alerts" class="space-y-2.5"></div>
-        </div>
-        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
-            <h3 class="font-bold text-sm mb-4">OEE (Overall Equipment Effectiveness)</h3>
-            <div class="flex items-center justify-center"><div class="relative w-36 h-36">
-                <svg class="w-full h-full -rotate-90" viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke-width="10" class="stroke-gray-100 dark:stroke-gray-800"/><circle id="oee-arc" cx="60" cy="60" r="52" fill="none" stroke-width="10" stroke-linecap="round" stroke="#2a8bff" stroke-dasharray="326.7" stroke-dashoffset="70" style="transition:stroke-dashoffset 1s ease"/></svg>
-                <div class="absolute inset-0 flex flex-col items-center justify-center"><span id="oee-val" class="text-2xl font-black" style="color:#2a8bff">78%</span><span class="text-[9px] text-gray-400">OEE</span></div>
-            </div></div>
-            <div class="grid grid-cols-3 gap-2 mt-4">
-                <div class="text-center p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50"><p id="oee-a" class="text-xs font-bold text-green-500">89%</p><p class="text-[9px] text-gray-400">Availability</p></div>
-                <div class="text-center p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50"><p id="oee-p" class="text-xs font-bold text-blue-500">91%</p><p class="text-[9px] text-gray-400">Performance</p></div>
-                <div class="text-center p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50"><p id="oee-q" class="text-xs font-bold text-purple-500">97%</p><p class="text-[9px] text-gray-400">Quality</p></div>
-            </div>
-        </div>
-        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
-            <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-sm">Temperature Overview</h3><span class="text-[10px] text-gray-400">Live</span></div>
-            <div id="temp-list" class="space-y-2"></div>
-            <div class="flex justify-between mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 text-[9px] text-gray-400"><span>Normal &lt;60°C</span><span class="text-yellow-500">Warning 60-75°C</span><span class="text-red-500">Critical &gt;75°C</span></div>
-        </div>
-    </div>
-</div>
-</main>
-
-<!-- MACHINE DETAIL MODAL -->
-<div id="modal-overlay" class="fixed inset-0 z-[100] hidden">
-    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal()"></div>
-    <div class="absolute right-0 top-0 bottom-0 w-full max-w-3xl bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 overflow-y-auto slide-in">
-        <div id="modal-content" class="p-6"></div>
-    </div>
+  </header>
+  <div id="content" class="p-5 lg:p-6"></div>
 </div>
 
 <script>
-// ===== COLORS (hardcoded, no dynamic Tailwind) =====
-const C = {
-    running:'#10b981', idle:'#f59e0b', stopped:'#ef4444', maintenance:'#8b5cf6',
-    cnc:'#3b82f6', vmc:'#10b981', press:'#8b5cf6',
-    blue:'#3b82f6', cyan:'#06b6d4', emerald:'#10b981', teal:'#14b8a6', purple:'#8b5cf6', orange:'#f97316',
-    brand:'#2a8bff'
-};
-const SH = c => c+'44'; // shadow alpha
+// ============================================================
+// DATA
+// ============================================================
+function hc(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))&0xffff;return h}
 
-// ===== DATA =====
-const machines = [
-    {id:'CNC-01',type:'cnc',status:'running',temp:54,power:4.2,jobs:47,errors:1,batch:'A',uptime:87,tempHist7:[48,51,53,56,54,50,54],tempHist2:[50,54],jobsHist7:[42,44,46,43,48,22,47],jobsHist2:[43,47],errHist7:[0,1,0,0,2,0,1],errHist2:[0,1]},
-    {id:'CNC-02',type:'cnc',status:'running',temp:58,power:4.5,jobs:42,errors:0,batch:'A',uptime:82,tempHist7:[50,52,55,57,58,53,58],tempHist2:[53,58],jobsHist7:[38,40,42,39,44,20,42],jobsHist2:[40,42],errHist7:[1,0,0,1,0,0,0],errHist2:[0,0]},
-    {id:'CNC-03',type:'cnc',status:'running',temp:51,power:3.9,jobs:49,errors:0,batch:'A',uptime:91,tempHist7:[46,48,50,52,51,47,51],tempHist2:[47,51],jobsHist7:[44,46,48,45,50,24,49],jobsHist2:[45,49],errHist7:[0,0,0,0,0,0,0],errHist2:[0,0]},
-    {id:'CNC-04',type:'cnc',status:'idle',temp:32,power:0.8,jobs:38,errors:2,batch:'A',uptime:65,tempHist7:[45,47,42,38,35,30,32],tempHist2:[30,32],jobsHist7:[40,38,35,42,30,18,38],jobsHist2:[35,38],errHist7:[0,1,0,1,0,0,2],errHist2:[0,2]},
-    {id:'CNC-05',type:'cnc',status:'running',temp:56,power:4.1,jobs:44,errors:0,batch:'A',uptime:85,tempHist7:[49,51,54,56,55,50,56],tempHist2:[50,56],jobsHist7:[40,42,44,41,46,22,44],jobsHist2:[42,44],errHist7:[0,0,1,0,0,0,0],errHist2:[0,0]},
-    {id:'CNC-06',type:'cnc',status:'running',temp:62,power:4.8,jobs:35,errors:1,batch:'B',uptime:78,tempHist7:[55,58,60,63,62,56,62],tempHist2:[56,62],jobsHist7:[30,32,34,31,36,16,35],jobsHist2:[32,35],errHist7:[0,0,1,0,0,0,1],errHist2:[0,1]},
-    {id:'CNC-07',type:'cnc',status:'running',temp:59,power:4.3,jobs:39,errors:0,batch:'B',uptime:80,tempHist7:[52,54,57,59,58,53,59],tempHist2:[53,59],jobsHist7:[35,37,39,36,41,19,39],jobsHist2:[37,39],errHist7:[0,0,0,0,0,0,0],errHist2:[0,0]},
-    {id:'CNC-08',type:'cnc',status:'stopped',temp:28,power:0,jobs:22,errors:5,batch:'B',uptime:45,tempHist7:[50,48,42,35,28,28,28],tempHist2:[28,28],jobsHist7:[38,35,30,25,22,0,22],jobsHist2:[18,22],errHist7:[0,1,2,1,0,0,5],errHist2:[3,5]},
-    {id:'CNC-09',type:'cnc',status:'running',temp:55,power:4.0,jobs:41,errors:0,batch:'B',uptime:83,tempHist7:[48,50,53,55,54,49,55],tempHist2:[49,55],jobsHist7:[37,39,41,38,43,20,41],jobsHist2:[39,41],errHist7:[0,0,0,0,0,0,0],errHist2:[0,0]},
-    {id:'CNC-10',type:'cnc',status:'running',temp:57,power:4.4,jobs:43,errors:0,batch:'B',uptime:84,tempHist7:[50,52,55,57,56,51,57],tempHist2:[51,57],jobsHist7:[39,41,43,40,45,21,43],jobsHist2:[41,43],errHist7:[0,0,0,1,0,0,0],errHist2:[0,0]},
-    {id:'VMC-01',type:'vmc',status:'running',temp:48,power:5.2,jobs:31,errors:0,batch:'C',uptime:88,tempHist7:[42,44,46,48,47,43,48],tempHist2:[43,48],jobsHist7:[27,29,31,28,33,15,31],jobsHist2:[28,31],errHist7:[0,0,0,0,0,0,0],errHist2:[0,0]},
-    {id:'VMC-02',type:'vmc',status:'running',temp:52,power:5.5,jobs:28,errors:1,batch:'C',uptime:85,tempHist7:[45,47,50,52,51,46,52],tempHist2:[46,52],jobsHist7:[24,26,28,25,30,14,28],jobsHist2:[25,28],errHist7:[0,0,0,1,0,0,1],errHist2:[0,1]},
-    {id:'VMC-03',type:'vmc',status:'idle',temp:35,power:1.1,jobs:24,errors:2,batch:'C',uptime:68,tempHist7:[44,42,40,38,36,33,35],tempHist2:[33,35],jobsHist7:[28,26,24,30,22,12,24],jobsHist2:[22,24],errHist7:[0,0,1,0,1,0,2],errHist2:[1,2]},
-    {id:'VMC-04',type:'vmc',status:'running',temp:50,power:5.0,jobs:30,errors:0,batch:'C',uptime:86,tempHist7:[43,45,48,50,49,44,50],tempHist2:[44,50],jobsHist7:[26,28,30,27,32,15,30],jobsHist2:[27,30],errHist7:[0,0,0,0,0,0,0],errHist2:[0,0]},
-    {id:'VMC-05',type:'vmc',status:'running',temp:47,power:4.9,jobs:33,errors:0,batch:'D',uptime:90,tempHist7:[41,43,45,47,46,42,47],tempHist2:[42,47],jobsHist7:[29,31,33,30,35,16,33],jobsHist2:[30,33],errHist7:[0,0,0,0,0,0,0],errHist2:[0,0]},
-    {id:'VMC-06',type:'vmc',status:'running',temp:53,power:5.3,jobs:27,errors:0,batch:'D',uptime:82,tempHist7:[46,48,51,53,52,47,53],tempHist2:[47,53],jobsHist7:[23,25,27,24,29,13,27],jobsHist2:[24,27],errHist7:[0,0,0,0,0,0,0],errHist2:[0,0]},
-    {id:'VMC-07',type:'vmc',status:'maintenance',temp:30,power:0,jobs:18,errors:3,batch:'D',uptime:40,tempHist7:[48,45,40,35,30,30,30],tempHist2:[30,30],jobsHist7:[28,24,20,18,0,0,18],jobsHist2:[0,18],errHist7:[0,1,1,0,0,1,3],errHist2:[1,3]},
-    {id:'VMC-08',type:'vmc',status:'running',temp:49,power:5.1,jobs:29,errors:0,batch:'D',uptime:84,tempHist7:[42,44,47,49,48,43,49],tempHist2:[43,49],jobsHist7:[25,27,29,26,31,14,29],jobsHist2:[26,29],errHist7:[0,0,0,0,0,0,0],errHist2:[0,0]},
-    {id:'PRS-01',type:'press',status:'running',temp:68,power:8.2,jobs:120,errors:0,batch:'E',uptime:92,tempHist7:[60,63,65,67,68,62,68],tempHist2:[62,68],jobsHist7:[110,112,115,118,120,60,120],jobsHist2:[115,120],errHist7:[0,0,0,0,0,0,0],errHist2:[0,0]},
-    {id:'PRS-02',type:'press',status:'running',temp:71,power:8.5,jobs:115,errors:1,batch:'E',uptime:89,tempHist7:[62,65,68,70,71,64,71],tempHist2:[64,71],jobsHist7:[105,108,112,110,115,55,115],jobsHist2:[110,115],errHist7:[0,0,1,0,0,0,1],errHist2:[0,1]},
-    {id:'PRS-03',type:'press',status:'running',temp:65,power:7.9,jobs:118,errors:0,batch:'E',uptime:91,tempHist7:[58,60,62,64,65,60,65],tempHist2:[60,65],jobsHist7:[108,110,114,116,118,58,118],jobsHist2:[112,118],errHist7:[0,0,0,0,0,0,0],errHist2:[0,0]},
-    {id:'PRS-04',type:'press',status:'stopped',temp:25,power:0,jobs:85,errors:4,batch:'F',uptime:52,tempHist7:[60,55,45,35,25,25,25],tempHist2:[25,25],jobsHist7:[100,95,90,85,0,0,85],jobsHist2:[0,85],errHist7:[0,0,1,1,2,0,4],errHist2:[2,4]},
-    {id:'PRS-05',type:'press',status:'running',temp:70,power:8.3,jobs:110,errors:0,batch:'F',uptime:87,tempHist7:[62,64,67,69,70,63,70],tempHist2:[63,70],jobsHist7:[100,103,106,108,110,52,110],jobsHist2:[105,110],errHist7:[0,0,0,0,0,0,0],errHist2:[0,0]},
-    {id:'PRS-06',type:'press',status:'idle',temp:38,power:1.5,jobs:95,errors:1,batch:'F',uptime:70,tempHist7:[55,52,48,42,38,35,38],tempHist2:[35,38],jobsHist7:[100,98,96,95,80,40,95],jobsHist2:[80,95],errHist7:[0,0,0,0,1,0,1],errHist2:[0,1]}
+const RAW=[
+{id:'CNC-01',type:'cnc',status:'running',temp:54,power:4.2,jobs:47,errors:1,uptime:87},
+{id:'CNC-02',type:'cnc',status:'running',temp:58,power:4.5,jobs:42,errors:0,uptime:82},
+{id:'CNC-03',type:'cnc',status:'running',temp:51,power:3.9,jobs:49,errors:0,uptime:91},
+{id:'CNC-04',type:'cnc',status:'idle',temp:32,power:0.8,jobs:38,errors:2,uptime:65},
+{id:'CNC-05',type:'cnc',status:'running',temp:56,power:4.1,jobs:44,errors:0,uptime:85},
+{id:'CNC-06',type:'cnc',status:'running',temp:62,power:4.8,jobs:35,errors:1,uptime:78},
+{id:'CNC-07',type:'cnc',status:'running',temp:59,power:4.3,jobs:39,errors:0,uptime:80},
+{id:'CNC-08',type:'cnc',status:'stopped',temp:28,power:0,jobs:22,errors:5,uptime:45},
+{id:'CNC-09',type:'cnc',status:'running',temp:55,power:4.0,jobs:41,errors:0,uptime:83},
+{id:'CNC-10',type:'cnc',status:'running',temp:57,power:4.4,jobs:43,errors:0,uptime:84},
+{id:'VMC-01',type:'vmc',status:'running',temp:48,power:5.2,jobs:31,errors:0,uptime:88},
+{id:'VMC-02',type:'vmc',status:'running',temp:52,power:5.5,jobs:28,errors:1,uptime:85},
+{id:'VMC-03',type:'vmc',status:'idle',temp:35,power:1.1,jobs:24,errors:2,uptime:68},
+{id:'VMC-04',type:'vmc',status:'running',temp:50,power:5.0,jobs:30,errors:0,uptime:86},
+{id:'VMC-05',type:'vmc',status:'running',temp:47,power:4.9,jobs:33,errors:0,uptime:90},
+{id:'VMC-06',type:'vmc',status:'running',temp:53,power:5.3,jobs:27,errors:0,uptime:82},
+{id:'VMC-07',type:'vmc',status:'maintenance',temp:30,power:0,jobs:18,errors:3,uptime:40},
+{id:'VMC-08',type:'vmc',status:'running',temp:49,power:5.1,jobs:29,errors:0,uptime:84},
+{id:'PRS-01',type:'press',status:'running',temp:68,power:8.2,jobs:120,errors:0,uptime:92},
+{id:'PRS-02',type:'press',status:'running',temp:71,power:8.5,jobs:115,errors:1,uptime:89},
+{id:'PRS-03',type:'press',status:'running',temp:65,power:7.9,jobs:118,errors:0,uptime:91},
+{id:'PRS-04',type:'press',status:'stopped',temp:25,power:0,jobs:85,errors:4,uptime:52},
+{id:'PRS-05',type:'press',status:'running',temp:70,power:8.3,jobs:110,errors:0,uptime:87},
+{id:'PRS-06',type:'press',status:'idle',temp:38,power:1.5,jobs:95,errors:1,uptime:70}
 ];
 
-const BD={A:{name:'Gear Assembly X',type:'CNC',n:5,done:220,total:500,c:'#3b82f6'},B:{name:'Shaft Component Y',type:'CNC',n:5,done:180,total:500,c:'#06b6d4'},C:{name:'Housing Block P',type:'VMC',n:4,done:113,total:200,c:'#10b981'},D:{name:'Valve Body Q',type:'VMC',n:4,done:107,total:250,c:'#14b8a6'},E:{name:'Metal Casing Z',type:'Press',n:3,done:353,total:500,c:'#8b5cf6'},F:{name:'Bracket Frame W',type:'Press',n:3,done:290,total:400,c:'#f97316'}};
+const machines=RAW.map(m=>{
+  const h=hc(m.id),sb={cnc:2.5,vmc:3.2,press:1.8};
+  const st=+(sb[m.type]+(h%15)/10).toFixed(1);
+  const ts=m.temp<60?100:m.temp<75?70:35;
+  const es=Math.max(0,100-m.errors*15);
+  const hs=Math.round(m.uptime*.4+es*.3+ts*.3);
+  const rp=m.status==='stopped'?0:m.status==='maintenance'?5:m.uptime;
+  const rem=100-rp;
+  const ip=m.status==='idle'?Math.round(rem*.7):Math.round(rem*.45);
+  const sp=100-rp-ip;
+  const spark=Array.from({length:8},(_,i)=>m.temp+Math.round(Math.sin(h+i*1.3)*5+Math.cos(h+i)*3));
+  const t24=Array.from({length:24},(_,i)=>{
+    const b=m.status==='stopped'?m.temp:m.temp-8+Math.round(Math.sin(i/3)*6+(h%5));
+    return Math.max(20,Math.min(95,b));
+  });
+  const p24=Array.from({length:24},(_,i)=>{
+    if(i<6||i>20)return m.status==='stopped'?0:+(m.power*.15).toFixed(1);
+    return +Math.max(0,(m.power+Math.sin(h+i)*m.power*.15)).toFixed(1);
+  });
+  const j24=Array.from({length:24},(_,i)=>{
+    if(i<6||i>20)return 0;
+    return Math.max(0,Math.round(m.jobs/14+Math.sin(h+i)*2.5));
+  });
+  return{...m,startupTime:st,healthScore:hs,runPct:rp,idlePct:ip,stopPct:sp,sparkline:spark,temp24:t24,power24:p24,jobs24:j24};
+});
 
-const PD={'2d':{l:['Yesterday','Today'],v:[310,347]},'7d':{l:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],v:[280,310,345,320,360,180,95]},'1m':{l:['W1','W2','W3','W4'],v:[1650,1820,1740,1890]}};
-const ED={'2d':{l:['Yesterday','Today'],v:[580,610]},'7d':{l:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],v:[620,650,680,640,700,350,180]},'1m':{l:['W1','W2','W3','W4'],v:[3200,3450,3300,3580]}};
-const DR={'2d':'Apr 10 — Apr 12','7d':'Apr 5 — Apr 12','1m':'Mar 12 — Apr 12'};
-const DL={'2d':'Last 2 days','7d':'Last 7 days','1m':'Last month'};
-const D7L=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-const D2L=['Yesterday','Today'];
+// ============================================================
+// THEME PALETTES
+// ============================================================
+const PALETTES={
+  dark:{
+    run:'#34d399',idle:'#fbbf24',stop:'#f87171',maint:'#a78bfa',
+    cnc:'#3b82f6',vmc:'#10b981',press:'#8b5cf6',
+    accent:'#06d6f2',
+    donutTrack:'#1a2744',
+    tooltipBg:'#111b2e',tooltipBorder:'#1a2744',
+    grid:'rgba(26,39,68,.6)',tick:'#546380',legend:'#94a3b8'
+  },
+  light:{
+    run:'#059669',idle:'#d97706',stop:'#dc2626',maint:'#7c3aed',
+    cnc:'#2563eb',vmc:'#059669',press:'#7c3aed',
+    accent:'#0891b2',
+    donutTrack:'#e2e8f0',
+    tooltipBg:'#ffffff',tooltipBorder:'#e2e8f0',
+    grid:'rgba(0,0,0,.07)',tick:'#64748b',legend:'#475569'
+  }
+};
+let theme=localStorage.getItem('cnc-theme')||'dark';
+let P=PALETTES[theme];
 
-let curF='all',curD='7d';
-const fil=()=>curF==='all'?machines:machines.filter(m=>m.type===curF);
+function toggleTheme(){
+  theme=theme==='dark'?'light':'dark';
+  P=PALETTES[theme];
+  document.documentElement.setAttribute('data-theme',theme);
+  localStorage.setItem('cnc-theme',theme);
+  const ico=document.getElementById('theme-icon');
+  if(ico)ico.innerHTML=theme==='dark'?'&#9788;':'&#9789;';
+  render();
+}
+// Apply saved theme on load
+(function(){
+  document.documentElement.setAttribute('data-theme',theme);
+  P=PALETTES[theme];
+})();
 
-// ===== SVG DONUT/PIE HELPERS =====
-function donutSVG(id,segs,r=52,sw=10){
-    const el=document.getElementById(id);
-    const circ=2*Math.PI*r;
-    const total=segs.reduce((s,x)=>s+x.v,0);
-    let offset=0;
-    el.innerHTML=`<circle cx="60" cy="60" r="${r}" fill="none" stroke-width="${sw}" class="stroke-gray-100 dark:stroke-gray-800"/>`;
-    segs.forEach(s=>{
-        const len=(s.v/total)*circ;
-        el.innerHTML+=`<circle cx="60" cy="60" r="${r}" fill="none" stroke-width="${sw}" stroke="${s.c}" stroke-dasharray="${len} ${circ-len}" stroke-dashoffset="${-offset}" stroke-linecap="round" class="donut-seg"/>`;
-        offset+=len;
+// ============================================================
+// STATE
+// ============================================================
+const S={page:'dashboard',filter:'all',selMachine:null,detailTab:'overview',logSearch:''};
+const charts={};
+function destroyCharts(){Object.keys(charts).forEach(k=>{charts[k].destroy();delete charts[k]})}
+
+// ============================================================
+// HELPERS
+// ============================================================
+const sc=s=>({running:P.run,idle:P.idle,stopped:P.stop,maintenance:P.maint}[s]||'#64748b');
+const tc=t=>({cnc:P.cnc,vmc:P.vmc,press:P.press}[t]);
+const tl=t=>({cnc:'CNC',vmc:'VMC',press:'Press'}[t]);
+const filtered=()=>S.filter==='all'?machines:machines.filter(m=>m.type===S.filter);
+const hcol=v=>v>=80?P.run:v>=55?P.idle:P.stop;
+
+function donutSVG(rp,ip,sp,sz,r,sw){
+  if(!r){r=20;sw=5;sz=sz||52}
+  const cx=sz/2,cy=sz/2,c=2*Math.PI*r;
+  const segs=[{p:rp,c:P.run},{p:ip,c:P.idle},{p:sp,c:P.stop}].filter(s=>s.p>0);
+  let off=0;
+  let paths=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke-width="${sw}" stroke="${P.donutTrack}"/>`;
+  segs.forEach((s,i)=>{const l=(s.p/100)*c;paths+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke-width="${sw}" stroke="${s.c}" stroke-dasharray="${l} ${c-l}" stroke-dashoffset="${-off}" stroke-linecap="round" style="transition:stroke-dashoffset .8s ease ${i*.12}s"/>`;off+=l});
+  return `<svg viewBox="0 0 ${sz} ${sz}" width="${sz}" height="${sz}" class="-rotate-90">${paths}</svg>`;
+}
+function miniDonut(rp,ip,sp,sz){return donutSVG(rp,ip,sp,sz||52,20,5)}
+
+function sparkSVG(data,w=72,h=22,col='var(--accent)'){
+  const mn=Math.min(...data),mx=Math.max(...data),rng=mx-mn||1;
+  const pts=data.map((v,i)=>`${(i/(data.length-1))*w},${h-((v-mn)/rng)*(h-4)-2}`).join(' ');
+  return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}"><polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/></svg>`;
+}
+
+function genLogs(mid){
+  const m=machines.find(x=>x.id===mid);if(!m)return[];
+  const h=hc(mid);
+  const msgs={
+    info:['Machine powered on','Spindle started at {r} RPM','Job #{j} started','Job #{j} completed','Tool change: T{t}','Coolant level OK','Cycle time: {c}s','Part ejected','Program loaded: P{p}','Warmup complete','Feed rate adjusted','Axis homed successfully','Auto mode engaged','Batch counter updated'],
+    warning:['Temperature rising: {d}°C','Vibration above threshold','Coolant level low','Tool wear approaching limit','Power fluctuation detected','Cycle time exceeded target','Chip conveyor full','Hydraulic oil temp high'],
+    error:['Emergency stop triggered','Spindle overload detected','Axis limit reached','Communication timeout','Hydraulic pressure drop','Motor fault E{e}','Servo alarm: axis overload','Tool breakage detected']
+  };
+  const logs=[];
+  for(let i=0;i<28;i++){
+    const hr=6+Math.floor(i*14/28),mn=(h*(i+1)*7)%60;
+    const tp=i<20?'info':i<24?'warning':'error';
+    const pool=msgs[tp];
+    let msg=pool[(h+i)%pool.length].replace('{r}',1200+(h%3)*600).replace('{j}',1000+i).replace('{t}',1+(i%8)).replace('{c}',25+(h%20)).replace('{p}',100+(h%50)).replace('{d}',m.temp+5).replace('{e}',100+(h%50));
+    logs.push({time:`${String(hr).padStart(2,'0')}:${String(mn).padStart(2,'0')}`,type:tp,message:msg});
+  }
+  return logs.sort((a,b)=>b.time.localeCompare(a.time));
+}
+
+function genHistory(mid){
+  const m=machines.find(x=>x.id===mid);if(!m)return[];
+  const h=hc(mid),hist=[];
+  for(let d=30;d>=1;d--){
+    const dt=new Date();dt.setDate(dt.getDate()-d);
+    const v=Math.sin(h+d)*.3;
+    hist.push({
+      date:dt.toISOString().split('T')[0],
+      shift:d%2===0?'Day':'Night',
+      jobs:Math.max(0,Math.round(m.jobs*(.7+v+Math.random()*.3))),
+      avgPower:Math.max(0,+(m.power*(.8+v*.5+Math.random()*.2)).toFixed(1)),
+      avgTemp:Math.max(20,Math.round(m.temp*(.85+v*.3+Math.random()*.15))),
+      errors:Math.floor(Math.random()*Math.max(1,m.errors+1)),
+      uptime:Math.min(100,Math.max(30,Math.round(m.uptime*(.85+Math.random()*.15))))
     });
+  }
+  return hist;
 }
-function pieSVG(id,segs){
-    const el=document.getElementById(id);
-    const total=segs.reduce((s,x)=>s+x.v,0);
-    let cumAngle=0;
-    el.innerHTML='';
-    segs.forEach(s=>{
-        const angle=(s.v/total)*360;
-        const startAngle=cumAngle;
-        const endAngle=cumAngle+angle;
-        const x1=60+52*Math.cos(startAngle*Math.PI/180);
-        const y1=60+52*Math.sin(startAngle*Math.PI/180);
-        const x2=60+52*Math.cos(endAngle*Math.PI/180);
-        const y2=60+52*Math.sin(endAngle*Math.PI/180);
-        const large=angle>180?1:0;
-        el.innerHTML+=`<path d="M60,60 L${x1},${y1} A52,52 0 ${large},1 ${x2},${y2} Z" fill="${s.c}" opacity="0.85"/>`;
-        cumAngle+=angle;
+
+function downloadCSV(data,fname){
+  if(!data.length)return;
+  const hd=Object.keys(data[0]).join(',');
+  const rows=data.map(r=>Object.values(r).join(',')).join('\n');
+  const blob=new Blob([hd+'\n'+rows],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;a.click();URL.revokeObjectURL(a.href);
+}
+
+// ============================================================
+// RENDER - NAVIGATION
+// ============================================================
+const pageTitles={dashboard:'Dashboard',alarms:'Alarm Reports',logs:'Logs',users:'Users',loto:'LOTO',settings:'Settings'};
+
+function navigate(page){
+  S.page=page;S.selMachine=null;S.detailTab='overview';S.logSearch='';
+  render();
+}
+
+function renderSidebar(){
+  document.querySelectorAll('#sidebar-nav .nb').forEach(b=>{
+    b.classList.toggle('active',b.dataset.page===S.page);
+  });
+}
+
+// ============================================================
+// RENDER - DASHBOARD
+// ============================================================
+function renderDashboard(){
+  destroyCharts();
+  const ms=filtered();
+  const avgP=ms.length?(ms.reduce((s,m)=>s+m.power,0)/ms.length).toFixed(1):'0';
+  const avgT=ms.length?Math.round(ms.reduce((s,m)=>s+m.temp,0)/ms.length):0;
+  const cntRun=ms.filter(m=>m.status==='running').length;
+  const cntIdle=ms.filter(m=>m.status==='idle').length;
+  const cntStop=ms.filter(m=>m.status==='stopped').length;
+  const cntMaint=ms.filter(m=>m.status==='maintenance').length;
+  const totalJ=ms.reduce((s,m)=>s+m.jobs,0);
+  const totalE=ms.reduce((s,m)=>s+m.errors,0);
+  const avgIdleHrs=cntIdle?(cntIdle*4.8).toFixed(1):'0';
+  const avgStopHrs=cntStop?(cntStop*6.2).toFixed(1):'0';
+  const runPct=ms.length?Math.round(cntRun/ms.length*100):0;
+
+  document.getElementById('content').innerHTML=`<div class="view-e">
+  <!-- SUMMARY -->
+  <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+    <!-- Total Machines -->
+    <div class="rounded-2xl p-4 border" style="background:var(--bg-2);border-color:var(--border)">
+      <div class="flex items-center justify-between mb-2"><span class="text-[10px] font-semibold uppercase tracking-wider" style="color:var(--t3)">Total Machines</span><div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(6,214,242,.1)"><svg class="w-4 h-4" style="color:var(--accent)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35"/><circle cx="12" cy="12" r="3"/></svg></div></div>
+      <p class="text-3xl font-black fm">${ms.length}</p>
+      <div class="flex items-center gap-2 mt-2 flex-wrap text-[10px]">
+        <span class="font-semibold" style="color:var(--run)">${cntRun} running</span>
+        ${cntIdle?`<span style="color:var(--t3)">·</span><span style="color:var(--idle)">${cntIdle} idle</span>`:''}
+        ${cntStop?`<span style="color:var(--t3)">·</span><span style="color:var(--stop)">${cntStop} stopped</span>`:''}
+        ${cntMaint?`<span style="color:var(--t3)">·</span><span style="color:var(--maint)">${cntMaint} maint</span>`:''}
+      </div>
+    </div>
+    <!-- Running -->
+    <div class="rounded-2xl p-4 border" style="background:var(--bg-2);border-color:var(--border)">
+      <div class="flex items-center justify-between mb-2"><span class="text-[10px] font-semibold uppercase tracking-wider" style="color:var(--t3)">Running</span><div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(52,211,153,.1)"><svg class="w-4 h-4" style="color:var(--run)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>
+      <p class="text-3xl font-black fm" style="color:var(--run)">${cntRun}</p>
+      <div class="flex items-center gap-1 mt-2"><div class="flex-1 h-1.5 rounded-full" style="background:var(--bg-1)"><div class="h-full rounded-full" style="width:${runPct}%;background:var(--run)"></div></div><span class="text-[10px] fm font-semibold" style="color:var(--run)">${runPct}%</span></div>
+    </div>
+    <!-- Idle -->
+    <div class="rounded-2xl p-4 border" style="background:var(--bg-2);border-color:var(--border)">
+      <div class="flex items-center justify-between mb-2"><span class="text-[10px] font-semibold uppercase tracking-wider" style="color:var(--t3)">Idle</span><div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(251,191,36,.1)"><svg class="w-4 h-4" style="color:var(--idle)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M10 8l6 4-6 4V8z" fill="none"/></svg></div></div>
+      <p class="text-3xl font-black fm" style="color:var(--idle)">${cntIdle}</p>
+      <p class="text-[10px] mt-2" style="color:var(--t3)">~${avgIdleHrs} hrs wasted today</p>
+    </div>
+    <!-- Stopped -->
+    <div class="rounded-2xl p-4 border" style="background:var(--bg-2);border-color:var(--border)">
+      <div class="flex items-center justify-between mb-2"><span class="text-[10px] font-semibold uppercase tracking-wider" style="color:var(--t3)">Stopped</span><div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(248,113,113,.1)"><svg class="w-4 h-4" style="color:var(--stop)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1"/></svg></div></div>
+      <p class="text-3xl font-black fm" style="color:var(--stop)">${cntStop}${cntMaint?` <span class="text-base" style="color:var(--maint)">+${cntMaint}</span>`:''}</p>
+      <p class="text-[10px] mt-2" style="color:var(--t3)">~${avgStopHrs} hrs downtime · ${totalE} errors</p>
+    </div>
+    <!-- Avg Electricity -->
+    <div class="rounded-2xl p-4 border" style="background:var(--bg-2);border-color:var(--border)">
+      <div class="flex items-center justify-between mb-2"><span class="text-[10px] font-semibold uppercase tracking-wider" style="color:var(--t3)">Avg. Electricity</span><div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(6,214,242,.1)"><svg class="w-4 h-4" style="color:var(--accent)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div></div>
+      <p class="text-3xl font-black fm">${avgP}<span class="text-sm font-normal" style="color:var(--t3)"> kW</span></p>
+      <p class="text-[10px] mt-2" style="color:var(--t3)">Total: ${ms.reduce((s,m)=>s+m.power,0).toFixed(1)} kW today</p>
+    </div>
+    <!-- Avg Temperature -->
+    <div class="rounded-2xl p-4 border" style="background:var(--bg-2);border-color:var(--border)">
+      <div class="flex items-center justify-between mb-2"><span class="text-[10px] font-semibold uppercase tracking-wider" style="color:var(--t3)">Avg. Temperature</span><div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:${avgT>60?'rgba(251,191,36,.1)':'rgba(52,211,153,.1)'}"><svg class="w-4 h-4" style="color:${avgT>60?'var(--idle)':'var(--run)'}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 14.76V3.5a2.5 2.5 0 00-5 0v11.26a4.5 4.5 0 105 0z"/></svg></div></div>
+      <p class="text-3xl font-black fm" style="color:${avgT>60?'var(--idle)':'var(--run)'}">${avgT}<span class="text-sm font-normal" style="color:var(--t3)"> °C</span></p>
+      <p class="text-[10px] mt-2" style="color:var(--t3)">${ms.filter(m=>m.temp>60).length} machines above 60°C</p>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="flex items-center gap-2 mb-6">${
+    [['all','All Machines',machines.length],['cnc','CNC',machines.filter(m=>m.type==='cnc').length],['vmc','VMC',machines.filter(m=>m.type==='vmc').length],['press','Press',machines.filter(m=>m.type==='press').length]].map(([k,l,n])=>{
+      const a=S.filter===k;
+      return `<button onclick="setFilter('${k}')" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold border transition-all" style="${a?'background:rgba(6,214,242,.1);border-color:rgba(6,214,242,.28);color:var(--accent)':'background:transparent;border-color:var(--border);color:var(--t3)'}">${l}<span class="px-1.5 py-0.5 rounded-lg text-[10px] fm" style="background:${a?'rgba(6,214,242,.18)':'rgba(100,100,100,.15)'}">${n}</span></button>`;
+    }).join('')
+  }</div>
+
+  <!-- MACHINE CARDS -->
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">${ms.map((m,i)=>machineCard(m,i)).join('')}</div>
+
+  <!-- CHARTS -->
+  <div class="grid lg:grid-cols-2 gap-5">
+    <div class="rounded-2xl p-5 border" style="background:var(--bg-2);border-color:var(--border)">
+      <div class="flex items-center justify-between mb-4"><h3 class="text-sm font-bold">Today's Production Output</h3><span class="text-[10px] fm" style="color:var(--t3)">Hourly</span></div>
+      <canvas id="ch-prod" height="180"></canvas>
+    </div>
+    <div class="rounded-2xl p-5 border" style="background:var(--bg-2);border-color:var(--border)">
+      <div class="flex items-center justify-between mb-4"><h3 class="text-sm font-bold">Fleet Utilization by Type</h3><span class="text-[10px] fm" style="color:var(--t3)">Running / Idle / Stopped %</span></div>
+      <canvas id="ch-util" height="180"></canvas>
+    </div>
+  </div>
+  </div>`;
+
+  initDashCharts(ms);
+}
+
+
+function machineCard(m,idx){
+  const s=sc(m.status),t=tc(m.type),h=hcol(m.healthScore);
+  return `<div onclick="selectMachine('${m.id}')" class="mc card-e rounded-2xl p-5 border" style="background:var(--bg-2);border-color:var(--border);animation-delay:${idx*.04}s">
+    <div style="position:absolute;top:0;left:0;bottom:0;width:3px;border-radius:0 2px 2px 0;background:${s};box-shadow:0 0 12px ${s}66"></div>
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2.5">
+        <span class="text-sm font-bold fm">${m.id}</span>
+        <span class="text-[9px] px-2 py-0.5 rounded-full font-semibold" style="background:${t}18;color:${t}">${tl(m.type)}</span>
+      </div>
+      <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style="background:${s}14">
+        <span class="w-2 h-2 rounded-full" style="background:${s};box-shadow:0 0 6px ${s}"></span>
+        <span class="text-[10px] font-semibold capitalize" style="color:${s}">${m.status}</span>
+      </div>
+    </div>
+    <!-- Body -->
+    <div class="flex gap-4">
+      <div class="flex flex-col items-center flex-shrink-0">
+        ${miniDonut(m.runPct,m.idlePct,m.stopPct)}
+        <span class="text-[9px] fm mt-1" style="color:var(--t3)">${m.runPct}% up</span>
+      </div>
+      <div class="flex-1 grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
+        <div><span style="color:var(--t3)">Power</span><p class="font-bold fm">${m.power} kW</p></div>
+        <div><span style="color:var(--t3)">Temp</span><p class="font-bold fm" style="color:${m.temp>75?'var(--stop)':m.temp>60?'var(--idle)':'inherit'}">${m.temp}°C</p></div>
+        <div><span style="color:var(--t3)">Jobs</span><p class="font-bold fm">${m.jobs}</p></div>
+        <div><span style="color:var(--t3)">Errors</span><p class="font-bold fm" style="color:${m.errors>0?'var(--stop)':'var(--run)'}">${m.errors}</p></div>
+        <div><span style="color:var(--t3)">Startup</span><p class="font-bold fm">${m.startupTime}m</p></div>
+        <div><span style="color:var(--t3)">Health</span><p class="font-bold fm" style="color:${h}">${m.healthScore}</p></div>
+      </div>
+    </div>
+    <!-- Footer -->
+    <div class="mt-3 pt-3 flex items-center justify-between" style="border-top:1px solid var(--border)">
+      <div class="flex gap-3 text-[9px]" style="color:var(--t3)">
+        <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--run)"></span>Run</span>
+        <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--idle)"></span>Idle</span>
+        <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--stop)"></span>Stop</span>
+      </div>
+      ${sparkSVG(m.sparkline)}
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// RENDER - DETAIL PAGE
+// ============================================================
+function renderDetail(){
+  destroyCharts();
+  const m=machines.find(x=>x.id===S.selMachine);if(!m)return;
+  const s=sc(m.status),t=tc(m.type),h=hcol(m.healthScore);
+
+  document.getElementById('content').innerHTML=`<div class="view-e">
+    <!-- Back + Header -->
+    <button onclick="goBack()" class="flex items-center gap-2 text-xs font-semibold mb-5 px-3 py-2 rounded-xl border transition-all hover:border-[var(--accent)]" style="color:var(--t2);background:var(--bg-2);border-color:var(--border)">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>Back to Dashboard
+    </button>
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+      <div class="flex items-center gap-4">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center" style="background:${t}18;border:1px solid ${t}33">
+          <span class="text-lg font-black fm" style="color:${t}">${m.id.split('-')[0]}</span>
+        </div>
+        <div>
+          <h2 class="text-xl font-black fm">${m.id}</h2>
+          <div class="flex items-center gap-2 mt-1 flex-wrap">
+            <span class="badge" style="background:${s}18;color:${s}"><span class="w-2 h-2 rounded-full" style="background:${s}"></span>${m.status.charAt(0).toUpperCase()+m.status.slice(1)}</span>
+            <span class="badge" style="background:${t}18;color:${t}">${tl(m.type)} Machine</span>
+            <span class="badge" style="background:${h}18;color:${h}">Health: ${m.healthScore}/100</span>
+          </div>
+        </div>
+      </div>
+      <button onclick="downloadMachineReport('${m.id}')" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all" style="background:rgba(6,214,242,.1);color:var(--accent);border:1px solid rgba(6,214,242,.25)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download Report
+      </button>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+      ${detailStat('Temperature',m.temp+'°C',m.temp>75?'var(--stop)':m.temp>60?'var(--idle)':'var(--run)')}
+      ${detailStat('Power Draw',m.power+' kW','var(--accent)')}
+      ${detailStat('Jobs Today',m.jobs,P.maint)}
+      ${detailStat('Startup Time',m.startupTime+' min','var(--t2)')}
+      ${detailStat('Errors',m.errors,m.errors>0?'var(--stop)':'var(--run)')}
+      ${detailStat('Uptime',m.uptime+'%','var(--run)')}
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex gap-1 mb-6 p-1 rounded-xl" style="background:var(--bg-1);border:1px solid var(--border);display:inline-flex">
+      <button onclick="setDetailTab('overview')" class="tab-btn ${S.detailTab==='overview'?'active':''}">Overview</button>
+      <button onclick="setDetailTab('logs')" class="tab-btn ${S.detailTab==='logs'?'active':''}">Logs</button>
+      <button onclick="setDetailTab('history')" class="tab-btn ${S.detailTab==='history'?'active':''}">History</button>
+    </div>
+
+    <div id="detail-content"></div>
+  </div>`;
+
+  renderDetailTab(m);
+}
+
+function detailStat(label,value,col){
+  return `<div class="rounded-xl p-4 text-center border" style="background:var(--bg-2);border-color:var(--border)">
+    <p class="text-xl font-black fm" style="color:${col}">${value}</p>
+    <p class="text-[10px] mt-1" style="color:var(--t3)">${label}</p></div>`;
+}
+
+function renderDetailTab(m){
+  const el=document.getElementById('detail-content');if(!el)return;
+  if(S.detailTab==='overview') renderOverview(el,m);
+  else if(S.detailTab==='logs') renderLogs(el,m);
+  else renderHistory(el,m);
+}
+
+// --- Overview Tab ---
+function renderOverview(el,m){
+  const s=sc(m.status);
+  el.innerHTML=`
+  <!-- Donut + Timeline -->
+  <div class="grid lg:grid-cols-3 gap-5 mb-5">
+    <div class="rounded-2xl p-5 border" style="background:var(--bg-2);border-color:var(--border)">
+      <h4 class="text-sm font-bold mb-4">Time Distribution</h4>
+      <div class="flex items-center gap-5">
+        <div class="relative flex-shrink-0" style="width:110px;height:110px">
+          ${donutSVG(m.runPct,m.idlePct,m.stopPct,110,42,8)}
+          <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="text-lg font-black fm">${m.runPct}%</span><span class="text-[9px]" style="color:var(--t3)">uptime</span></div>
+        </div>
+        <div class="space-y-2 text-xs">
+          <div class="flex items-center gap-2"><span class="w-3 h-3 rounded" style="background:var(--run)"></span>Running: <strong class="fm">${m.runPct}%</strong></div>
+          <div class="flex items-center gap-2"><span class="w-3 h-3 rounded" style="background:var(--idle)"></span>Idle: <strong class="fm">${m.idlePct}%</strong></div>
+          <div class="flex items-center gap-2"><span class="w-3 h-3 rounded" style="background:var(--stop)"></span>Stopped: <strong class="fm">${m.stopPct}%</strong></div>
+        </div>
+      </div>
+    </div>
+    <div class="lg:col-span-2 rounded-2xl p-5 border" style="background:var(--bg-2);border-color:var(--border)">
+      <h4 class="text-sm font-bold mb-4">Today's Activity Timeline</h4>
+      <div class="h-8 rounded-full overflow-hidden flex" style="background:var(--bg-1)">
+        <div style="width:${m.runPct}%;background:var(--run)" class="transition-all"></div>
+        <div style="width:${m.idlePct}%;background:var(--idle)" class="transition-all"></div>
+        <div style="width:${m.stopPct}%;background:var(--stop)" class="transition-all"></div>
+      </div>
+      <div class="flex justify-between mt-2 text-[10px] fm" style="color:var(--t3)"><span>06:00</span><span>09:00</span><span>12:00</span><span>15:00</span><span>Now</span></div>
+      <div class="grid grid-cols-3 gap-3 mt-4">
+        <div class="text-center p-2 rounded-lg" style="background:var(--bg-1)"><p class="text-xs font-bold fm" style="color:var(--run)">${(m.runPct*0.14).toFixed(1)}h</p><p class="text-[9px]" style="color:var(--t3)">Running</p></div>
+        <div class="text-center p-2 rounded-lg" style="background:var(--bg-1)"><p class="text-xs font-bold fm" style="color:var(--idle)">${(m.idlePct*0.14).toFixed(1)}h</p><p class="text-[9px]" style="color:var(--t3)">Idle</p></div>
+        <div class="text-center p-2 rounded-lg" style="background:var(--bg-1)"><p class="text-xs font-bold fm" style="color:var(--stop)">${(m.stopPct*0.14).toFixed(1)}h</p><p class="text-[9px]" style="color:var(--t3)">Stopped</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="grid lg:grid-cols-2 gap-5 mb-5">
+    <div class="rounded-2xl p-5 border" style="background:var(--bg-2);border-color:var(--border)">
+      <div class="flex items-center justify-between mb-3"><h4 class="text-sm font-bold">Temperature (24h)</h4><span class="text-[10px] fm" style="color:var(--t3)">°C</span></div>
+      <canvas id="ch-dtemp" height="180"></canvas>
+    </div>
+    <div class="rounded-2xl p-5 border" style="background:var(--bg-2);border-color:var(--border)">
+      <div class="flex items-center justify-between mb-3"><h4 class="text-sm font-bold">Power Draw (24h)</h4><span class="text-[10px] fm" style="color:var(--t3)">kW</span></div>
+      <canvas id="ch-dpower" height="180"></canvas>
+    </div>
+  </div>
+  <div class="rounded-2xl p-5 border" style="background:var(--bg-2);border-color:var(--border)">
+    <div class="flex items-center justify-between mb-3"><h4 class="text-sm font-bold">Jobs Completed (Hourly)</h4><span class="text-[10px] fm" style="color:var(--t3)">Today</span></div>
+    <canvas id="ch-djobs" height="160"></canvas>
+  </div>`;
+
+  initDetailCharts(m);
+}
+
+// --- Logs Tab ---
+function renderLogs(el,m){
+  const logs=genLogs(m.id);
+  const q=S.logSearch.toLowerCase();
+  const fLogs=q?logs.filter(l=>l.message.toLowerCase().includes(q)||l.type.includes(q)||l.time.includes(q)):logs;
+  const typeCol={info:'var(--accent)',warning:'var(--idle)',error:'var(--stop)'};
+
+  el.innerHTML=`
+  <div class="flex flex-col sm:flex-row gap-3 mb-5">
+    <div class="relative flex-1">
+      <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style="color:var(--t3)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" class="sinput" placeholder="Search logs by message, type, or time..." value="${S.logSearch}" oninput="S.logSearch=this.value;renderDetailTab(machines.find(x=>x.id===S.selMachine))">
+    </div>
+    <button onclick="downloadCSV(genLogs('${m.id}'),'${m.id}-logs.csv')" class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold shrink-0" style="background:rgba(6,214,242,.1);color:var(--accent);border:1px solid rgba(6,214,242,.25)">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export CSV
+    </button>
+  </div>
+  <div class="rounded-2xl border overflow-hidden" style="background:var(--bg-2);border-color:var(--border)">
+    <div class="overflow-x-auto">
+      <table class="tbl">
+        <thead><tr><th style="width:80px">Time</th><th style="width:90px">Severity</th><th>Message</th></tr></thead>
+        <tbody>${fLogs.map(l=>`<tr>
+          <td class="fm text-[11px]">${l.time}</td>
+          <td><span class="badge" style="background:${typeCol[l.type]}14;color:${typeCol[l.type]}">${l.type.toUpperCase()}</span></td>
+          <td class="text-[11px]">${l.message}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>
+    ${fLogs.length===0?'<div class="p-8 text-center text-xs" style="color:var(--t3)">No logs matching your search.</div>':''}
+  </div>
+  <p class="text-[10px] mt-3" style="color:var(--t3)">Showing ${fLogs.length} of ${logs.length} log entries</p>`;
+}
+
+// --- History Tab ---
+function renderHistory(el,m){
+  const hist=genHistory(m.id);
+  el.innerHTML=`
+  <div class="flex items-center justify-between mb-5">
+    <p class="text-xs" style="color:var(--t3)">Last 30 days of operational data</p>
+    <button onclick="downloadCSV(genHistory('${m.id}'),'${m.id}-history.csv')" class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold" style="background:rgba(6,214,242,.1);color:var(--accent);border:1px solid rgba(6,214,242,.25)">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export CSV
+    </button>
+  </div>
+  <div class="rounded-2xl border overflow-hidden" style="background:var(--bg-2);border-color:var(--border)">
+    <div class="overflow-x-auto">
+      <table class="tbl">
+        <thead><tr><th>Date</th><th>Shift</th><th>Jobs</th><th>Avg Power</th><th>Avg Temp</th><th>Errors</th><th>Uptime</th></tr></thead>
+        <tbody>${hist.map(r=>`<tr>
+          <td class="fm text-[11px]">${r.date}</td>
+          <td><span class="badge" style="background:${r.shift==='Day'?'rgba(251,191,36,.12);color:#fbbf24':'rgba(139,92,246,.12);color:#a78bfa'}">${r.shift}</span></td>
+          <td class="fm">${r.jobs}</td>
+          <td class="fm">${r.avgPower} kW</td>
+          <td class="fm" style="color:${r.avgTemp>75?'var(--stop)':r.avgTemp>60?'var(--idle)':'inherit'}">${r.avgTemp}°C</td>
+          <td class="fm" style="color:${r.errors>0?'var(--stop)':'var(--run)'}">${r.errors}</td>
+          <td><div class="flex items-center gap-2"><div class="flex-1 h-1.5 rounded-full" style="background:var(--bg-1)"><div class="h-full rounded-full" style="width:${r.uptime}%;background:${r.uptime>80?'var(--run)':r.uptime>60?'var(--idle)':'var(--stop)'}"></div></div><span class="fm text-[10px]" style="width:32px;text-align:right">${r.uptime}%</span></div></td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// RENDER - PLACEHOLDER
+// ============================================================
+function renderPlaceholder(){
+  const t=pageTitles[S.page]||S.page;
+  document.getElementById('content').innerHTML=`<div class="view-e flex flex-col items-center justify-center" style="min-height:60vh">
+    <div class="w-20 h-20 rounded-2xl flex items-center justify-center mb-6" style="background:var(--bg-2);border:1px solid var(--border)">
+      <svg class="w-10 h-10" style="color:var(--t3)" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+    </div>
+    <h2 class="text-xl font-bold mb-2">${t}</h2>
+    <p class="text-sm" style="color:var(--t3)">This module is under development.</p>
+    <button onclick="navigate('dashboard')" class="mt-6 px-5 py-2.5 rounded-xl text-xs font-semibold transition-all" style="background:rgba(6,214,242,.1);color:var(--accent);border:1px solid rgba(6,214,242,.25)">Back to Dashboard</button>
+  </div>`;
+}
+
+// ============================================================
+// CHARTS
+// ============================================================
+const cFont={family:'Inter',size:10};
+const cGrid=()=>({color:P.grid});
+const cTick=()=>({color:P.tick,font:cFont});
+const cTooltip=()=>({backgroundColor:P.tooltipBg,borderColor:P.tooltipBorder,borderWidth:1,titleFont:cFont,bodyFont:cFont,titleColor:P.tick,bodyColor:P.legend,padding:10,cornerRadius:8});
+
+function initDashCharts(ms){
+  // Hourly production
+  const hrs=Array.from({length:24},(_,i)=>String(i).padStart(2,'0')+':00');
+  const prodData=hrs.map((_,i)=>{
+    if(i<6||i>20)return 0;
+    return ms.filter(m=>m.status==='running').reduce((s,m)=>s+(m.jobs24[i]||0),0);
+  });
+  const ctx1=document.getElementById('ch-prod');
+  if(ctx1){
+    const g=ctx1.getContext('2d');
+    const grad=g.createLinearGradient(0,0,0,180);
+    grad.addColorStop(0,'rgba(6,214,242,.25)');grad.addColorStop(1,'rgba(6,214,242,.01)');
+    charts.prod=new Chart(g,{
+      type:'line',
+      data:{labels:hrs,datasets:[{data:prodData,fill:true,backgroundColor:grad,borderColor:P.accent,borderWidth:2,tension:.4,pointRadius:0,pointHoverRadius:4,pointHoverBackgroundColor:P.accent}]},
+      options:{responsive:true,plugins:{legend:{display:false},tooltip:cTooltip()},scales:{x:{grid:cGrid(),ticks:{...cTick(),maxTicksLimit:12}},y:{grid:cGrid(),ticks:cTick(),beginAtZero:true}}}
     });
+  }
+
+  // Utilization by type
+  const types=['CNC','VMC','Press'];
+  const typeKeys=['cnc','vmc','press'];
+  const utilData=typeKeys.map(tk=>{
+    const tm=ms.filter(m=>m.type===tk);
+    const n=tm.length||1;
+    return{
+      run:Math.round(tm.filter(m=>m.status==='running').length/n*100),
+      idle:Math.round(tm.filter(m=>m.status==='idle').length/n*100),
+      stop:Math.round(tm.filter(m=>m.status==='stopped'||m.status==='maintenance').length/n*100)
+    };
+  });
+  const ctx2=document.getElementById('ch-util');
+  if(ctx2){
+    charts.util=new Chart(ctx2.getContext('2d'),{
+      type:'bar',
+      data:{labels:types,datasets:[
+        {label:'Running',data:utilData.map(d=>d.run),backgroundColor:P.run,borderRadius:4,barPercentage:.6},
+        {label:'Idle',data:utilData.map(d=>d.idle),backgroundColor:P.idle,borderRadius:4,barPercentage:.6},
+        {label:'Stopped',data:utilData.map(d=>d.stop),backgroundColor:P.stop,borderRadius:4,barPercentage:.6}
+      ]},
+      options:{indexAxis:'y',responsive:true,plugins:{legend:{labels:{color:P.legend,font:cFont,boxWidth:10,padding:15}},tooltip:cTooltip()},scales:{x:{stacked:true,max:100,grid:cGrid(),ticks:{...cTick(),callback:v=>v+'%'}},y:{stacked:true,grid:{display:false},ticks:cTick()}}}
+    });
+  }
 }
 
-function barChart(el,data,color,maxOverride){
-    const mx=maxOverride||Math.max(...data.values);
-    el.innerHTML=data.values.map((v,i)=>`<div class="flex-1 flex flex-col items-center gap-1">
-        <span class="text-[9px] text-gray-400 font-medium">${v}</span>
-        <div class="w-full rounded-t bar-grow" style="height:${Math.max(v/mx*100,2)}%;background:linear-gradient(to top,${color},${color}88);animation-delay:${i*.08}s"></div>
-        <span class="text-[9px] text-gray-400">${data.labels[i]}</span>
-    </div>`).join('');
+function initDetailCharts(m){
+  const hrs=Array.from({length:24},(_,i)=>String(i).padStart(2,'0')+':00');
+
+  // Temperature
+  const ctx1=document.getElementById('ch-dtemp');
+  if(ctx1){
+    const g=ctx1.getContext('2d');
+    const grad=g.createLinearGradient(0,0,0,180);
+    grad.addColorStop(0,'rgba(251,191,36,.2)');grad.addColorStop(1,'rgba(251,191,36,.01)');
+    charts.dtemp=new Chart(g,{
+      type:'line',
+      data:{labels:hrs,datasets:[{data:m.temp24,fill:true,backgroundColor:grad,borderColor:P.idle,borderWidth:2,tension:.4,pointRadius:0,pointHoverRadius:4,pointHoverBackgroundColor:P.idle}]},
+      options:{responsive:true,plugins:{legend:{display:false},tooltip:{...cTooltip(),callbacks:{label:c=>c.raw+'°C'}}},scales:{x:{grid:cGrid(),ticks:{...cTick(),maxTicksLimit:12}},y:{grid:cGrid(),ticks:{...cTick(),callback:v=>v+'°'},suggestedMin:20,suggestedMax:90}}}
+    });
+  }
+
+  // Power
+  const ctx2=document.getElementById('ch-dpower');
+  if(ctx2){
+    const g=ctx2.getContext('2d');
+    const grad=g.createLinearGradient(0,0,0,180);
+    grad.addColorStop(0,'rgba(6,214,242,.22)');grad.addColorStop(1,'rgba(6,214,242,.01)');
+    charts.dpower=new Chart(g,{
+      type:'line',
+      data:{labels:hrs,datasets:[{data:m.power24,fill:true,backgroundColor:grad,borderColor:P.accent,borderWidth:2,tension:.35,pointRadius:0,pointHoverRadius:4,pointHoverBackgroundColor:P.accent}]},
+      options:{responsive:true,plugins:{legend:{display:false},tooltip:{...cTooltip(),callbacks:{label:c=>c.raw+' kW'}}},scales:{x:{grid:cGrid(),ticks:{...cTick(),maxTicksLimit:12}},y:{grid:cGrid(),ticks:{...cTick(),callback:v=>v+' kW'},beginAtZero:true}}}
+    });
+  }
+
+  // Jobs
+  const ctx3=document.getElementById('ch-djobs');
+  if(ctx3){
+    charts.djobs=new Chart(ctx3.getContext('2d'),{
+      type:'bar',
+      data:{labels:hrs,datasets:[{data:m.jobs24,backgroundColor:P.maint+'99',hoverBackgroundColor:P.maint+'dd',borderRadius:4,barPercentage:.7}]},
+      options:{responsive:true,plugins:{legend:{display:false},tooltip:{...cTooltip(),callbacks:{label:c=>c.raw+' jobs'}}},scales:{x:{grid:{display:false},ticks:{...cTick(),maxTicksLimit:12}},y:{grid:cGrid(),ticks:cTick(),beginAtZero:true}}}
+    });
+  }
 }
 
-// ===== RENDER =====
-function renderFilters(){
-    const tabs=[{k:'all',label:'All',n:machines.length,c:'#2a8bff'},{k:'cnc',label:'CNC',n:machines.filter(m=>m.type==='cnc').length,c:'#3b82f6'},{k:'vmc',label:'VMC',n:machines.filter(m=>m.type==='vmc').length,c:'#10b981'},{k:'press',label:'Press',n:machines.filter(m=>m.type==='press').length,c:'#8b5cf6'}];
-    document.getElementById('filter-tabs').innerHTML=tabs.map(t=>`<button onclick="setFilter('${t.k}')" data-f="${t.k}" class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition-all ${curF===t.k?'border-blue-500/30':'border-transparent text-gray-500 hover:text-gray-300'}" style="${curF===t.k?'background:rgba(42,139,255,.15);color:#2a8bff':''}">
-        <div class="w-2 h-2 rounded-full" style="background:${t.c}"></div>${t.label}<span class="ml-1 px-1.5 py-0.5 rounded-md text-[10px]" style="background:${curF===t.k?'rgba(42,139,255,.2)':'rgba(128,128,128,.15)'}">${t.n}</span>
-    </button>`).join('');
-
-    document.getElementById('date-tabs').innerHTML=['2d','7d','1m'].map(d=>`<button onclick="setDate('${d}')" class="px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${curD===d?'text-blue-500':'text-gray-500'}" style="${curD===d?'background:rgba(42,139,255,.15)':''}">${{
-        '2d':'2 Days','7d':'7 Days','1m':'1 Month'}[d]}</button>`).join('');
-    document.getElementById('date-range').textContent=DR[curD];
+// ============================================================
+// EVENTS
+// ============================================================
+function setFilter(f){S.filter=f;renderDashboard()}
+function selectMachine(id){S.selMachine=id;S.detailTab='overview';S.logSearch='';render()}
+function goBack(){S.selMachine=null;render()}
+function setDetailTab(tab){S.detailTab=tab;const m=machines.find(x=>x.id===S.selMachine);if(m)renderDetailTab(m)}
+function downloadMachineReport(id){
+  const m=machines.find(x=>x.id===id);if(!m)return;
+  const hist=genHistory(id);
+  const logs=genLogs(id);
+  let csv=`Machine Report: ${m.id}\nType,${tl(m.type)}\nStatus,${m.status}\nTemperature,${m.temp}°C\nPower,${m.power} kW\nJobs Today,${m.jobs}\nErrors,${m.errors}\nUptime,${m.uptime}%\nHealth Score,${m.healthScore}\n\n`;
+  csv+='--- HISTORY ---\n'+Object.keys(hist[0]).join(',')+'\n'+hist.map(r=>Object.values(r).join(',')).join('\n');
+  csv+='\n\n--- LOGS ---\nTime,Type,Message\n'+logs.map(l=>`${l.time},${l.type},"${l.message}"`).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${m.id}-report.csv`;a.click();URL.revokeObjectURL(a.href);
 }
 
-function renderSummary(){
-    const ms=fil(),run=ms.filter(m=>m.status==='running').length,idle=ms.filter(m=>m.status==='idle').length,stop=ms.filter(m=>m.status==='stopped').length,mnt=ms.filter(m=>m.status==='maintenance').length;
-    const tj=ms.reduce((s,m)=>s+m.jobs,0),au=(ms.reduce((s,m)=>s+m.uptime,0)/ms.length).toFixed(1),tp=ms.reduce((s,m)=>s+m.power,0).toFixed(1),at=(ms.reduce((s,m)=>s+m.temp,0)/ms.length).toFixed(0),te=ms.reduce((s,m)=>s+m.errors,0);
-    document.getElementById('summary-cards').innerHTML=`
-        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
-            <div class="flex items-center justify-between mb-3"><span class="text-xs text-gray-500">Total Machines</span><div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(42,139,255,.1)"><svg class="w-4 h-4" style="color:#2a8bff" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37"/></svg></div></div>
-            <p class="text-3xl font-black">${ms.length}</p>
-            <div class="flex items-center gap-2 mt-2 flex-wrap text-[10px]">
-                <span style="color:#10b981" class="font-medium">${run} running</span>${idle?`<span class="text-gray-400">· ${idle} idle</span>`:''}${stop?`<span style="color:#ef4444">· ${stop} stopped</span>`:''}${mnt?`<span style="color:#8b5cf6">· ${mnt} maint</span>`:''}
-            </div></div>
-        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
-            <div class="flex items-center justify-between mb-3"><span class="text-xs text-gray-500">Jobs Completed (Today)</span><div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(16,185,129,.1)"><svg class="w-4 h-4" style="color:#10b981" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div></div>
-            <p class="text-3xl font-black">${tj.toLocaleString()}</p>
-            <div class="flex items-center gap-1 mt-2"><svg class="w-3 h-3" style="color:#10b981" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg><span class="text-[10px] font-medium" style="color:#10b981">+12.4% vs last period</span></div></div>
-        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
-            <div class="flex items-center justify-between mb-3"><span class="text-xs text-gray-500">Avg Uptime</span><div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(59,130,246,.1)"><svg class="w-4 h-4" style="color:#3b82f6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div></div>
-            <p class="text-3xl font-black">${au}<span class="text-lg text-gray-400">%</span></p>
-            <div class="w-full h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 mt-3"><div class="h-full rounded-full transition-all" style="width:${au}%;background:#3b82f6"></div></div></div>
-        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
-            <div class="flex items-center justify-between mb-3"><span class="text-xs text-gray-500">Errors Today</span><div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(239,68,68,.1)"><svg class="w-4 h-4" style="color:#ef4444" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg></div></div>
-            <p class="text-3xl font-black">${te}</p>
-            <span class="text-[10px] text-gray-500 mt-2 inline-block">Power: <strong>${tp} kW</strong> · Avg temp: <strong style="color:${parseInt(at)>60?'#f97316':'inherit'}">${at}°C</strong></span></div>`;
+// ============================================================
+// MAIN RENDER
+// ============================================================
+function render(){
+  renderSidebar();
+  document.getElementById('page-title').textContent=pageTitles[S.page]||S.page;
+  if(S.page==='dashboard'){
+    if(S.selMachine) renderDetail();
+    else renderDashboard();
+  }else{
+    renderPlaceholder();
+  }
 }
 
-function renderBadges(){
-    const ms=fil(),cn={running:0,idle:0,stopped:0,maintenance:0};ms.forEach(m=>cn[m.status]++);
-    const rp=((cn.running/ms.length)*100).toFixed(0),ih=(cn.idle*4.8).toFixed(0),dh=(cn.stopped*6.4).toFixed(0);
-    const ap=(ms.filter(m=>m.status==='running').reduce((s,m)=>s+m.power,0)/Math.max(cn.running,1)).toFixed(1);
-    const b=(s,c,label,extra)=>`<div class="flex items-center gap-2 px-3 py-2 rounded-xl border" style="background:${c}11;border-color:${c}33"><span class="w-2.5 h-2.5 rounded-full" style="background:${c};box-shadow:0 0 6px ${c}88"></span><span class="text-xs font-semibold" style="color:${c}">${cn[s]} ${label}</span><span class="text-[10px]" style="color:${c}88">${extra}</span></div>`;
-    document.getElementById('status-badges').innerHTML=
-        b('running',C.running,'Running',rp+'% util')+
-        b('idle',C.idle,'Idle','~'+ih+' hrs wasted')+
-        (cn.stopped?b('stopped',C.stopped,'Stopped','~'+dh+' hrs down'):'')+
-        (cn.maintenance?b('maintenance',C.maintenance,'Maintenance','scheduled'):'')+
-        `<div class="flex items-center gap-2 px-3 py-2 rounded-xl border" style="background:#3b82f611;border-color:#3b82f633"><svg class="w-3.5 h-3.5" style="color:#3b82f6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg><span class="text-xs font-semibold" style="color:#3b82f6">Avg ${ap} kW</span><span class="text-[10px]" style="color:#3b82f688">per machine</span></div>`;
+// Clock
+function updateClock(){
+  const d=new Date();
+  const el=document.getElementById('clock');
+  if(el) el.textContent=d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 }
+setInterval(updateClock,1000);updateClock();
 
-function renderGrid(){
-    const ms=fil();
-    document.getElementById('machine-grid').innerHTML=ms.map(m=>{
-        const c=C[m.status];
-        return `<div onclick="openModal('${m.id}')" class="cursor-pointer p-2.5 rounded-xl border border-gray-100 dark:border-gray-700/50 hover:scale-105 transition-all bg-gray-50 dark:bg-gray-800/50" style="border-color:transparent" onmouseenter="this.style.borderColor='${c}66'" onmouseleave="this.style.borderColor='transparent'">
-            <div class="flex flex-col items-center gap-1.5">
-                <div class="w-3 h-3 rounded-full" style="background:${c};box-shadow:0 0 6px ${c}88"></div>
-                <span class="text-[10px] font-mono font-semibold">${m.id}</span>
-                <span class="text-[9px] text-gray-400">${m.temp}°C</span>
-            </div></div>`;
-    }).join('');
-}
+// Set theme icon on load
+(function(){
+  const ico=document.getElementById('theme-icon');
+  if(ico) ico.innerHTML=theme==='dark'?'&#9788;':'&#9789;';
+})();
 
-function renderCharts(){
-    barChart(document.getElementById('chart-prod'),{values:PD[curD].v,labels:PD[curD].l},'#3b82f6');
-    barChart(document.getElementById('chart-pow'),{values:ED[curD].v,labels:ED[curD].l},'#10b981');
-    document.getElementById('lbl-prod').textContent=DL[curD];
-    document.getElementById('lbl-pow').textContent=DL[curD];
-}
-
-function renderDonutPie(){
-    const ms=fil(),cn={running:0,idle:0,stopped:0,maintenance:0};ms.forEach(m=>cn[m.status]++);
-    donutSVG('donut-status',[{v:cn.running,c:C.running},{v:cn.idle,c:C.idle},{v:cn.stopped,c:C.stopped},{v:cn.maintenance,c:C.maintenance}].filter(s=>s.v>0));
-    document.getElementById('donut-center').textContent=ms.length;
-    document.getElementById('donut-legend').innerHTML=[{l:'Running',v:cn.running,c:C.running},{l:'Idle',v:cn.idle,c:C.idle},{l:'Stopped',v:cn.stopped,c:C.stopped},{l:'Maintenance',v:cn.maintenance,c:C.maintenance}].filter(x=>x.v>0).map(x=>`<div class="flex items-center gap-2"><div class="w-3 h-3 rounded" style="background:${x.c}"></div><span>${x.l}: <strong>${x.v}</strong></span></div>`).join('');
-
-    const jt={cnc:0,vmc:0,press:0};ms.forEach(m=>jt[m.type]+=m.jobs);
-    pieSVG('pie-jobs',[{v:jt.cnc,c:C.cnc},{v:jt.vmc,c:C.vmc},{v:jt.press,c:C.press}].filter(s=>s.v>0));
-    document.getElementById('pie-legend').innerHTML=[{l:'CNC',v:jt.cnc,c:C.cnc},{l:'VMC',v:jt.vmc,c:C.vmc},{l:'Press',v:jt.press,c:C.press}].filter(x=>x.v>0).map(x=>`<div class="flex items-center gap-2"><div class="w-3 h-3 rounded" style="background:${x.c}"></div><span>${x.l}: <strong>${x.v}</strong> jobs</span></div>`).join('');
-}
-
-function renderTimeline(){
-    const ms=fil().slice(0,8);
-    const pats=[[{c:'#10b981',w:35},{c:'#f59e0b',w:5},{c:'#10b981',w:40},{c:'#ef4444',w:8},{c:'#10b981',w:12}],[{c:'#10b981',w:25},{c:'#f59e0b',w:10},{c:'#10b981',w:50},{c:'#f59e0b',w:15}],[{c:'#10b981',w:60},{c:'#f59e0b',w:3},{c:'#10b981',w:30},{c:'#f59e0b',w:7}],[{c:'#10b981',w:15},{c:'#ef4444',w:20},{c:'#10b981',w:35},{c:'#f59e0b',w:10},{c:'#10b981',w:20}],[{c:'#10b981',w:45},{c:'#8b5cf6',w:15},{c:'#10b981',w:30},{c:'#f59e0b',w:10}],[{c:'#10b981',w:30},{c:'#f59e0b',w:8},{c:'#10b981',w:42},{c:'#10b981',w:20}],[{c:'#10b981',w:50},{c:'#f59e0b',w:5},{c:'#10b981',w:35},{c:'#f59e0b',w:10}],[{c:'#10b981',w:40},{c:'#ef4444',w:10},{c:'#10b981',w:30},{c:'#f59e0b',w:5},{c:'#10b981',w:15}]];
-    document.getElementById('timeline').innerHTML=ms.map((m,i)=>{
-        const bars=pats[i%pats.length].map(s=>`<div class="h-full" style="width:${s.w}%;background:${s.c}"></div>`).join('');
-        return `<div class="flex items-center gap-3"><span class="text-[10px] text-gray-500 w-14 flex-shrink-0 font-mono">${m.id}</span><div class="flex-1 h-5 rounded-full overflow-hidden flex bg-gray-100 dark:bg-gray-800">${bars}</div><span class="text-[10px] text-gray-500 w-10 flex-shrink-0 text-right font-semibold">${m.uptime}%</span></div>`;
-    }).join('');
-}
-
-function renderBatches(){
-    const ms=fil(),bs=[...new Set(ms.map(m=>m.batch))];
-    document.getElementById('batch-count').textContent=bs.length+' active';
-    document.getElementById('batches').innerHTML=bs.map(b=>{
-        const d=BD[b];if(!d)return '';const pct=Math.round(d.done/d.total*100);
-        return `<div class="p-3 rounded-xl border" style="background:${d.c}08;border-color:${d.c}33">
-            <div class="flex justify-between items-center mb-1.5"><span class="text-xs font-bold" style="color:${d.c}">Batch ${b}</span><span class="text-[10px] text-gray-500">${d.n} ${d.type}</span></div>
-            <p class="text-[10px] text-gray-500 mb-2">${d.name}</p>
-            <div class="w-full h-1.5 rounded-full bg-gray-200 dark:bg-gray-700"><div class="h-full rounded-full transition-all" style="width:${pct}%;background:${d.c}"></div></div>
-            <div class="flex justify-between mt-1"><span class="text-[9px] text-gray-400">${d.done}/${d.total} parts</span><span class="text-[9px] font-bold" style="color:${d.c}">${pct}%</span></div></div>`;
-    }).join('');
-}
-
-function renderAlerts(){
-    const aa=[{s:'critical',m:'CNC-08',msg:'Motor overload — emergency stop',t:'12m ago',ty:'cnc',c:'#ef4444'},{s:'warning',m:'PRS-02',msg:'Temperature 71°C — approaching threshold',t:'28m ago',ty:'press',c:'#f59e0b'},{s:'warning',m:'VMC-03',msg:'Idle >45 min — check operator',t:'45m ago',ty:'vmc',c:'#f59e0b'},{s:'info',m:'VMC-07',msg:'Scheduled maintenance started',t:'1h ago',ty:'vmc',c:'#3b82f6'},{s:'critical',m:'PRS-04',msg:'Hydraulic pressure drop — stopped',t:'2h ago',ty:'press',c:'#ef4444'}];
-    const fa=curF==='all'?aa:aa.filter(a=>a.ty===curF);
-    document.getElementById('alert-count').textContent=fa.length;
-    document.getElementById('alerts').innerHTML=fa.slice(0,4).map(a=>`<div class="flex items-start gap-2.5 p-2.5 rounded-lg border" style="background:${a.c}08;border-color:${a.c}22">
-        <div class="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5" style="background:${a.c}22"><svg class="w-3.5 h-3.5" style="color:${a.c}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg></div>
-        <div><div class="flex items-center gap-1.5 mb-0.5"><span class="text-[10px] font-bold">${a.m}</span><span class="text-[9px] px-1.5 py-0.5 rounded font-medium uppercase" style="background:${a.c}15;color:${a.c}">${a.s}</span></div><p class="text-[10px] text-gray-400">${a.msg}</p><p class="text-[9px] text-gray-500 mt-0.5">${a.t}</p></div></div>`).join('');
-}
-
-function renderTemp(){
-    const ms=fil().filter(m=>m.status!=='stopped').sort((a,b)=>b.temp-a.temp).slice(0,8);
-    document.getElementById('temp-list').innerHTML=ms.map(m=>{
-        const pct=Math.min(m.temp/90*100,100),c=m.temp>75?'#ef4444':m.temp>60?'#f59e0b':'#10b981';
-        return `<div class="flex items-center gap-3"><span class="text-[10px] text-gray-500 w-14 flex-shrink-0 font-mono">${m.id}</span><div class="flex-1 h-2 rounded-full bg-gray-100 dark:bg-gray-800"><div class="h-full rounded-full transition-all" style="width:${pct}%;background:${c}"></div></div><span class="text-[10px] font-semibold w-10 text-right" style="color:${c}">${m.temp}°C</span></div>`;
-    }).join('');
-}
-
-function renderOEE(){
-    const ms=fil(),au=ms.reduce((s,m)=>s+m.uptime,0)/ms.length;
-    const a=Math.min(au+5,99).toFixed(0),p=Math.min(au+8,99).toFixed(0),q=Math.min(au+14,99).toFixed(0);
-    const oee=(a*p*q/10000).toFixed(1);
-    document.getElementById('oee-val').textContent=oee+'%';
-    document.getElementById('oee-a').textContent=a+'%';
-    document.getElementById('oee-p').textContent=p+'%';
-    document.getElementById('oee-q').textContent=q+'%';
-    document.getElementById('oee-arc').style.strokeDashoffset=326.7-(oee/100)*326.7;
-}
-
-// ===== MACHINE DETAIL MODAL =====
-function openModal(id){
-    const m=machines.find(x=>x.id===id);if(!m)return;
-    const sc=C[m.status],tc=C[m.type];
-    const hist=curD==='2d'?{t:m.tempHist2,j:m.jobsHist2,e:m.errHist2,l:D2L}:{t:m.tempHist7,j:m.jobsHist7,e:m.errHist7,l:D7L};
-    const totalJ=hist.j.reduce((s,v)=>s+v,0),totalE=hist.e.reduce((s,v)=>s+v,0);
-    const runPct=m.uptime,idlePct=Math.max(100-m.uptime-5,0),downPct=100-runPct-idlePct;
-
-    document.getElementById('modal-content').innerHTML=`
-        <div class="flex items-center justify-between mb-6">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center" style="background:${tc}22"><span class="text-lg font-black" style="color:${tc}">${m.id.split('-')[0]}</span></div>
-                <div><h2 class="text-xl font-black">${m.id}</h2><div class="flex items-center gap-2 mt-1"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style="background:${sc}22;color:${sc}"><span class="w-1.5 h-1.5 rounded-full" style="background:${sc}"></span>${m.status.charAt(0).toUpperCase()+m.status.slice(1)}</span><span class="text-xs text-gray-400">Batch ${m.batch} · ${BD[m.batch]?.name||''}</span></div></div>
-            </div>
-            <button onclick="closeModal()" class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center hover:scale-105 transition-transform text-gray-500 text-lg">✕</button>
-        </div>
-
-        <!-- Live Stats -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-center"><p class="text-2xl font-black">${m.temp}°C</p><p class="text-[10px] text-gray-400">Temperature</p></div>
-            <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-center"><p class="text-2xl font-black">${m.power}<span class="text-sm text-gray-400"> kW</span></p><p class="text-[10px] text-gray-400">Power Draw</p></div>
-            <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-center"><p class="text-2xl font-black">${m.jobs}</p><p class="text-[10px] text-gray-400">Jobs Today</p></div>
-            <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-center"><p class="text-2xl font-black">${m.uptime}<span class="text-sm text-gray-400">%</span></p><p class="text-[10px] text-gray-400">Uptime</p></div>
-        </div>
-
-        <!-- Temperature Bar Graph -->
-        <div class="bg-gray-50 dark:bg-gray-800/30 rounded-2xl p-5 mb-4">
-            <div class="flex items-center justify-between mb-3"><h4 class="font-bold text-sm">Temperature History</h4><span class="text-[10px] text-gray-400">${DL[curD]}</span></div>
-            <div id="modal-temp-chart" class="flex items-end gap-2 h-28"></div>
-            <div class="flex justify-between mt-2 text-[9px] text-gray-400"><span>Normal &lt;60°C</span><span style="color:#f59e0b">Warning 60-75°C</span><span style="color:#ef4444">Critical &gt;75°C</span></div>
-        </div>
-
-        <!-- Jobs Bar Graph -->
-        <div class="bg-gray-50 dark:bg-gray-800/30 rounded-2xl p-5 mb-4">
-            <div class="flex items-center justify-between mb-3"><h4 class="font-bold text-sm">Jobs Completed</h4><span class="text-[10px] text-gray-400">Total: ${totalJ}</span></div>
-            <div id="modal-jobs-chart" class="flex items-end gap-2 h-28"></div>
-        </div>
-
-        <!-- Errors Bar Graph -->
-        <div class="bg-gray-50 dark:bg-gray-800/30 rounded-2xl p-5 mb-4">
-            <div class="flex items-center justify-between mb-3"><h4 class="font-bold text-sm">Errors / Faults</h4><span class="text-[10px] font-medium" style="color:${totalE>3?'#ef4444':totalE>0?'#f59e0b':'#10b981'}">Total: ${totalE}</span></div>
-            <div id="modal-err-chart" class="flex items-end gap-2 h-24"></div>
-        </div>
-
-        <!-- Donut + Pie Row -->
-        <div class="grid md:grid-cols-2 gap-4 mb-4">
-            <div class="bg-gray-50 dark:bg-gray-800/30 rounded-2xl p-5">
-                <h4 class="font-bold text-sm mb-3">Uptime Breakdown</h4>
-                <div class="flex items-center gap-4">
-                    <div class="relative w-28 h-28 flex-shrink-0"><svg id="modal-donut" viewBox="0 0 120 120" class="w-full h-full -rotate-90"></svg><div class="absolute inset-0 flex flex-col items-center justify-center"><span class="text-lg font-black">${m.uptime}%</span><span class="text-[8px] text-gray-400">uptime</span></div></div>
-                    <div class="space-y-1.5 text-[11px]">
-                        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded" style="background:#10b981"></div>Running: ${runPct}%</div>
-                        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded" style="background:#f59e0b"></div>Idle: ${idlePct}%</div>
-                        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded" style="background:#ef4444"></div>Down: ${downPct}%</div>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-gray-50 dark:bg-gray-800/30 rounded-2xl p-5">
-                <h4 class="font-bold text-sm mb-3">Error Distribution</h4>
-                <div class="flex items-center gap-4">
-                    <div class="relative w-28 h-28 flex-shrink-0"><svg id="modal-pie" viewBox="0 0 120 120" class="w-full h-full -rotate-90"></svg></div>
-                    <div class="space-y-1.5 text-[11px]" id="modal-pie-legend"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Machine Timeline -->
-        <div class="bg-gray-50 dark:bg-gray-800/30 rounded-2xl p-5">
-            <h4 class="font-bold text-sm mb-3">Today's Activity</h4>
-            <div class="h-6 rounded-full overflow-hidden flex bg-gray-200 dark:bg-gray-700">
-                <div style="width:${runPct}%;background:#10b981"></div>
-                <div style="width:${idlePct}%;background:#f59e0b"></div>
-                <div style="width:${downPct}%;background:#ef4444"></div>
-            </div>
-            <div class="flex justify-between mt-2 text-[9px] text-gray-400"><span>6:00 AM</span><span>Now (3:42 PM)</span></div>
-        </div>
-    `;
-
-    // Render modal charts
-    const mtx=Math.max(...hist.t);
-    document.getElementById('modal-temp-chart').innerHTML=hist.t.map((v,i)=>{
-        const c=v>75?'#ef4444':v>60?'#f59e0b':'#10b981';
-        return `<div class="flex-1 flex flex-col items-center gap-1"><span class="text-[9px] font-semibold" style="color:${c}">${v}°</span><div class="w-full rounded-t bar-grow" style="height:${Math.max(v/mtx*100,5)}%;background:linear-gradient(to top,${c},${c}88);animation-delay:${i*.1}s"></div><span class="text-[9px] text-gray-400">${hist.l[i]}</span></div>`;
-    }).join('');
-
-    const mjx=Math.max(...hist.j,1);
-    document.getElementById('modal-jobs-chart').innerHTML=hist.j.map((v,i)=>`<div class="flex-1 flex flex-col items-center gap-1"><span class="text-[9px] text-gray-400 font-medium">${v}</span><div class="w-full rounded-t bar-grow" style="height:${Math.max(v/mjx*100,3)}%;background:linear-gradient(to top,${tc},${tc}88);animation-delay:${i*.1}s"></div><span class="text-[9px] text-gray-400">${hist.l[i]}</span></div>`).join('');
-
-    const mex=Math.max(...hist.e,1);
-    document.getElementById('modal-err-chart').innerHTML=hist.e.map((v,i)=>`<div class="flex-1 flex flex-col items-center gap-1"><span class="text-[9px] font-medium" style="color:${v>0?'#ef4444':'#10b981'}">${v}</span><div class="w-full rounded-t bar-grow" style="height:${Math.max(v/mex*100,5)}%;background:${v>0?'linear-gradient(to top,#ef4444,#ef444488)':'linear-gradient(to top,#10b981,#10b98188)'};animation-delay:${i*.1}s"></div><span class="text-[9px] text-gray-400">${hist.l[i]}</span></div>`).join('');
-
-    donutSVG('modal-donut',[{v:runPct,c:'#10b981'},{v:idlePct,c:'#f59e0b'},{v:Math.max(downPct,1),c:'#ef4444'}]);
-
-    const errTypes=[{l:'Overload',v:Math.ceil(totalE*.4)||0,c:'#ef4444'},{l:'Temp Warning',v:Math.ceil(totalE*.3)||0,c:'#f59e0b'},{l:'Vibration',v:Math.floor(totalE*.2)||0,c:'#8b5cf6'},{l:'Other',v:Math.max(totalE-Math.ceil(totalE*.4)-Math.ceil(totalE*.3)-Math.floor(totalE*.2),0),c:'#6b7280'}].filter(x=>x.v>0);
-    if(errTypes.length===0) errTypes.push({l:'No Errors',v:1,c:'#10b981'});
-    pieSVG('modal-pie',errTypes);
-    document.getElementById('modal-pie-legend').innerHTML=errTypes.map(x=>`<div class="flex items-center gap-2"><div class="w-3 h-3 rounded" style="background:${x.c}"></div>${x.l}: ${x.v}</div>`).join('');
-
-    document.getElementById('modal-overlay').classList.remove('hidden');
-    document.body.style.overflow='hidden';
-}
-
-function closeModal(){
-    document.getElementById('modal-overlay').classList.add('hidden');
-    document.body.style.overflow='';
-}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
-
-// ===== ACTIONS =====
-function setFilter(f){curF=f;renderAll()}
-function setDate(d){curD=d;renderAll()}
-function renderAll(){renderFilters();renderSummary();renderBadges();renderGrid();renderCharts();renderDonutPie();renderTimeline();renderBatches();renderAlerts();renderTemp();renderOEE()}
-renderAll();
+// Init
+render();
 </script>
 </body>
 </html>
